@@ -94,6 +94,14 @@
 		margin: 0 auto;
 	}
 
+	@media only screen and (max-width: 700px) {
+		.container {
+			max-width: 90%;
+			margin: 0 auto;
+		}
+
+	}
+
 	.button-container {
 		margin-top: 40px;
 		height: 40px;
