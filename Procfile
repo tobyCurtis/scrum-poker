@@ -1,1 +1,1 @@
-web: deno run --allow-net=":3000" --allow-read app.ts
+web: deno run --allow-env --allow-net=":$PORT" --allow-read app.ts
