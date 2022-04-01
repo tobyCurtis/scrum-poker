@@ -34,7 +34,7 @@
 
 	ws.addEventListener('message', msg => {
 		let message = JSON.parse(msg.data)
-		
+
 		if(message.type === 'playerUpdate') {
 			players = message.players
 		} else if (message.type === 'cardFlip') {
