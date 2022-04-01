@@ -2,6 +2,7 @@
 	import Card from './components/Card.svelte'
 	import Choice from './components/Choice.svelte'
 	import Modal from './components/Modal.svelte'
+	const heartbeatTimeInMilliseconds = 50000
 	let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
 	let ws = new WebSocket(wshost)
 
@@ -46,8 +47,7 @@
 		}
 	})
 
-	setInterval(keepAlive, [10000]);
-
+	setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
 	function keepAlive() {
 		ws.send(JSON.stringify({type: 'heartbeat'}))
 	}
