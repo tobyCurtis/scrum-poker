@@ -2,7 +2,9 @@
 	import Card from './components/Card.svelte'
 	import Choice from './components/Choice.svelte'
 	import Modal from './components/Modal.svelte'
-	let ws = new WebSocket('ws://localhost:3000/ws')
+	let wshost = location.origin.replace(/^https/, 'ws') + '/ws'
+	console.log(wshost)
+	let ws = new WebSocket(wshost)
 
 	let showNameSelection = true
 	let name = ''
