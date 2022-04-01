@@ -13,19 +13,11 @@
 
 </script>
 
-<div class="choice-container">
-	<div class="choice {selected ? 'selected' : ''}" on:click={emitPoints} >
-		<span>{points}</span>
-	</div>
+<div class="choice {selected ? 'selected' : ''}" on:click={emitPoints} >
+	<span>{points}</span>
 </div>
 
-
 <style>
-	.choice-container {
-		position: relative;
-		width: 50px;
-	}
-
 	.choice {
 		font-weight: bold;
 		width: 50px;
@@ -41,10 +33,7 @@
 	}
 
 	.selected {
-		margin-bottom: 10px;
 		background-color: cornflowerblue;
-		position: absolute;
-		top: -10px;
 		color: white
 	}
 </style>
