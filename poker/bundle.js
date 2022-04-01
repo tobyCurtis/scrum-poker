@@ -1495,15 +1495,15 @@ var app = (function () {
     			t4 = space();
     			if (if_block1) if_block1.c();
     			if_block1_anchor = empty();
-    			attr_dev(h1, "class", "svelte-umf16y");
+    			attr_dev(h1, "class", "svelte-7dxvmj");
     			add_location(h1, file, 51, 1, 1310);
-    			attr_dev(div0, "class", "flex-container svelte-umf16y");
+    			attr_dev(div0, "class", "flex-container svelte-7dxvmj");
     			add_location(div0, file, 54, 1, 1337);
-    			attr_dev(div1, "class", "button-container svelte-umf16y");
+    			attr_dev(div1, "class", "button-container svelte-7dxvmj");
     			add_location(div1, file, 60, 1, 1516);
-    			attr_dev(div2, "class", "flex-container svelte-umf16y");
+    			attr_dev(div2, "class", "flex-container svelte-7dxvmj");
     			add_location(div2, file, 68, 1, 1763);
-    			attr_dev(div3, "class", "container svelte-umf16y");
+    			attr_dev(div3, "class", "container svelte-7dxvmj");
     			add_location(div3, file, 50, 0, 1285);
     		},
     		l: function claim(nodes) {
