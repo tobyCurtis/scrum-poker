@@ -1,5 +1,5 @@
 
-(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
+(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35730/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 var app = (function () {
     'use strict';
 
@@ -1056,29 +1056,29 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[12] = list[i];
-    	child_ctx[14] = i;
+    	child_ctx[13] = list[i];
+    	child_ctx[15] = i;
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[15] = list[i].user;
-    	child_ctx[16] = list[i].points;
-    	child_ctx[14] = i;
+    	child_ctx[16] = list[i].user;
+    	child_ctx[17] = list[i].points;
+    	child_ctx[15] = i;
     	return child_ctx;
     }
 
-    // (54:2) {#each players as {user, points}
+    // (56:2) {#each players as {user, points}
     function create_each_block_1(ctx) {
     	let card;
     	let current;
 
     	card = new Card({
     			props: {
-    				hasSelection: /*points*/ ctx[16],
-    				text: /*cardsFlipped*/ ctx[4] && /*points*/ ctx[16] || 'I am card',
-    				name: /*user*/ ctx[15]
+    				hasSelection: /*points*/ ctx[17],
+    				text: /*cardsFlipped*/ ctx[4] && /*points*/ ctx[17] || 'I am card',
+    				name: /*user*/ ctx[16]
     			},
     			$$inline: true
     		});
@@ -1093,9 +1093,9 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			const card_changes = {};
-    			if (dirty & /*players*/ 8) card_changes.hasSelection = /*points*/ ctx[16];
-    			if (dirty & /*cardsFlipped, players*/ 24) card_changes.text = /*cardsFlipped*/ ctx[4] && /*points*/ ctx[16] || 'I am card';
-    			if (dirty & /*players*/ 8) card_changes.name = /*user*/ ctx[15];
+    			if (dirty & /*players*/ 8) card_changes.hasSelection = /*points*/ ctx[17];
+    			if (dirty & /*cardsFlipped, players*/ 24) card_changes.text = /*cardsFlipped*/ ctx[4] && /*points*/ ctx[17] || 'I am card';
+    			if (dirty & /*players*/ 8) card_changes.name = /*user*/ ctx[16];
     			card.$set(card_changes);
     		},
     		i: function intro(local) {
@@ -1116,14 +1116,14 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(54:2) {#each players as {user, points}",
+    		source: "(56:2) {#each players as {user, points}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (62:25) 
+    // (64:25) 
     function create_if_block_2(ctx) {
     	let button;
     	let mounted;
@@ -1133,7 +1133,7 @@ var app = (function () {
     		c: function create() {
     			button = element("button");
     			button.textContent = "Vote Next Issue";
-    			add_location(button, file, 62, 3, 1626);
+    			add_location(button, file, 64, 3, 1691);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -1155,14 +1155,14 @@ var app = (function () {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(62:25) ",
+    		source: "(64:25) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (60:2) {#if players.find(player => player.points) && !cardsFlipped}
+    // (62:2) {#if players.find(player => player.points) && !cardsFlipped}
     function create_if_block_1(ctx) {
     	let button;
     	let mounted;
@@ -1172,7 +1172,7 @@ var app = (function () {
     		c: function create() {
     			button = element("button");
     			button.textContent = "Show Cards";
-    			add_location(button, file, 60, 3, 1549);
+    			add_location(button, file, 62, 3, 1614);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -1194,22 +1194,22 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(60:2) {#if players.find(player => player.points) && !cardsFlipped}",
+    		source: "(62:2) {#if players.find(player => player.points) && !cardsFlipped}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (68:2) {#each pointOptions as pointValue, i}
+    // (70:2) {#each pointOptions as pointValue, i}
     function create_each_block(ctx) {
     	let choice;
     	let current;
 
     	choice = new Choice({
     			props: {
-    				points: /*pointValue*/ ctx[12],
-    				selected: /*pointValue*/ ctx[12] === /*mySelection*/ ctx[2]
+    				points: /*pointValue*/ ctx[13],
+    				selected: /*pointValue*/ ctx[13] === /*mySelection*/ ctx[2]
     			},
     			$$inline: true
     		});
@@ -1226,7 +1226,7 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			const choice_changes = {};
-    			if (dirty & /*mySelection*/ 4) choice_changes.selected = /*pointValue*/ ctx[12] === /*mySelection*/ ctx[2];
+    			if (dirty & /*mySelection*/ 4) choice_changes.selected = /*pointValue*/ ctx[13] === /*mySelection*/ ctx[2];
     			choice.$set(choice_changes);
     		},
     		i: function intro(local) {
@@ -1247,14 +1247,14 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(68:2) {#each pointOptions as pointValue, i}",
+    		source: "(70:2) {#each pointOptions as pointValue, i}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (75:0) {#if showNameSelection}
+    // (77:0) {#if showNameSelection}
     function create_if_block(ctx) {
     	let modal;
     	let current;
@@ -1282,7 +1282,7 @@ var app = (function () {
     		p: function update(ctx, dirty) {
     			const modal_changes = {};
 
-    			if (dirty & /*$$scope, name*/ 262146) {
+    			if (dirty & /*$$scope, name*/ 524290) {
     				modal_changes.$$scope = { dirty, ctx };
     			}
 
@@ -1306,14 +1306,14 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(75:0) {#if showNameSelection}",
+    		source: "(77:0) {#if showNameSelection}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (76:1) <Modal>
+    // (78:1) <Modal>
     function create_default_slot(ctx) {
     	let input;
     	let mounted;
@@ -1323,7 +1323,7 @@ var app = (function () {
     		c: function create() {
     			input = element("input");
     			attr_dev(input, "placeholder", "enter your name");
-    			add_location(input, file, 79, 2, 1974);
+    			add_location(input, file, 81, 2, 2039);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -1350,14 +1350,14 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(76:1) <Modal>",
+    		source: "(78:1) <Modal>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (77:2) 
+    // (79:2) 
     function create_header_slot(ctx) {
     	let h2;
 
@@ -1366,7 +1366,7 @@ var app = (function () {
     			h2 = element("h2");
     			h2.textContent = "...do I know you?";
     			attr_dev(h2, "slot", "header");
-    			add_location(h2, file, 76, 2, 1924);
+    			add_location(h2, file, 78, 2, 1989);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h2, anchor);
@@ -1380,14 +1380,14 @@ var app = (function () {
     		block,
     		id: create_header_slot.name,
     		type: "slot",
-    		source: "(77:2) ",
+    		source: "(79:2) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (81:2) 
+    // (83:2) 
     function create_footer_slot(ctx) {
     	let button;
     	let mounted;
@@ -1398,7 +1398,7 @@ var app = (function () {
     			button = element("button");
     			button.textContent = "Submit";
     			attr_dev(button, "slot", "footer");
-    			add_location(button, file, 80, 2, 2032);
+    			add_location(button, file, 82, 2, 2097);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -1420,7 +1420,7 @@ var app = (function () {
     		block,
     		id: create_footer_slot.name,
     		type: "slot",
-    		source: "(81:2) ",
+    		source: "(83:2) ",
     		ctx
     	});
 
@@ -1501,15 +1501,15 @@ var app = (function () {
     			if (if_block1) if_block1.c();
     			if_block1_anchor = empty();
     			attr_dev(h1, "class", "svelte-3edshr");
-    			add_location(h1, file, 49, 1, 1246);
+    			add_location(h1, file, 51, 1, 1311);
     			attr_dev(div0, "class", "flex-container svelte-3edshr");
-    			add_location(div0, file, 52, 1, 1273);
+    			add_location(div0, file, 54, 1, 1338);
     			attr_dev(div1, "class", "button-container svelte-3edshr");
-    			add_location(div1, file, 58, 1, 1452);
+    			add_location(div1, file, 60, 1, 1517);
     			attr_dev(div2, "class", "flex-container svelte-3edshr");
-    			add_location(div2, file, 66, 1, 1699);
+    			add_location(div2, file, 68, 1, 1764);
     			attr_dev(div3, "class", "container svelte-3edshr");
-    			add_location(div3, file, 48, 0, 1221);
+    			add_location(div3, file, 50, 0, 1286);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1692,7 +1692,9 @@ var app = (function () {
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('App', slots, []);
-    	let ws = new WebSocket('ws://localhost:3000/ws');
+    	let wshost = location.origin.replace(/^https/, 'ws') + '/ws';
+    	console.log(wshost);
+    	let ws = new WebSocket(wshost);
     	let showNameSelection = true;
     	let name = '';
     	let pointOptions = [1, 2, 3, 5, 8, 13];
@@ -1755,6 +1757,7 @@ var app = (function () {
     		Card,
     		Choice,
     		Modal,
+    		wshost,
     		ws,
     		showNameSelection,
     		name,
@@ -1769,6 +1772,7 @@ var app = (function () {
     	});
 
     	$$self.$inject_state = $$props => {
+    		if ('wshost' in $$props) wshost = $$props.wshost;
     		if ('ws' in $$props) ws = $$props.ws;
     		if ('showNameSelection' in $$props) $$invalidate(0, showNameSelection = $$props.showNameSelection);
     		if ('name' in $$props) $$invalidate(1, name = $$props.name);
