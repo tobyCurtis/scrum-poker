@@ -3,7 +3,6 @@
 	import Choice from './components/Choice.svelte'
 	import Modal from './components/Modal.svelte'
 	let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
-	console.log(wshost)
 	let ws = new WebSocket(wshost)
 
 	let showNameSelection = true
@@ -35,7 +34,7 @@
 
 	ws.addEventListener('message', msg => {
 		let message = JSON.parse(msg.data)
-		console.log(message)
+		
 		if(message.type === 'playerUpdate') {
 			players = message.players
 		} else if (message.type === 'cardFlip') {
