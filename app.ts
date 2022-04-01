@@ -10,7 +10,7 @@ interface Player {
 let sockets = new Map<string, WebSocket>();
 let players = new Map<string, Player>();
 
-const server = Deno.listen({ port: 3000 });
+const server = Deno.listen({ port: 8000 });
 console.log('http://localhost:3000')
 
 for await (const conn of server) {
@@ -30,6 +30,8 @@ async function serveHttp(conn: Deno.Conn) {
         // Use the request pathname as filepath
         const url = new URL(requestEvent.request.url);
         const filepath = decodeURIComponent(url.pathname);
+
+        console.log('filepath', filepath)
 
         if(filepath === '/ws'){
             const upgrade = requestEvent.request.headers.get("upgrade") || "";
