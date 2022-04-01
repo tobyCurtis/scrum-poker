@@ -645,51 +645,46 @@ var app = (function () {
     const file$2 = "src/components/Choice.svelte";
 
     function create_fragment$2(ctx) {
-    	let div1;
-    	let div0;
+    	let div;
     	let span;
     	let t;
-    	let div0_class_value;
+    	let div_class_value;
     	let mounted;
     	let dispose;
 
     	const block = {
     		c: function create() {
-    			div1 = element("div");
-    			div0 = element("div");
+    			div = element("div");
     			span = element("span");
     			t = text(/*points*/ ctx[0]);
-    			add_location(span, file$2, 17, 2, 331);
-    			attr_dev(div0, "class", div0_class_value = "choice " + (/*selected*/ ctx[1] ? 'selected' : '') + " svelte-1v9eu5q");
-    			add_location(div0, file$2, 16, 1, 256);
-    			attr_dev(div1, "class", "choice-container svelte-1v9eu5q");
-    			add_location(div1, file$2, 15, 0, 224);
+    			add_location(span, file$2, 16, 1, 298);
+    			attr_dev(div, "class", div_class_value = "choice " + (/*selected*/ ctx[1] ? 'selected' : '') + " svelte-1ir9ng4");
+    			add_location(div, file$2, 15, 0, 224);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div1, anchor);
-    			append_dev(div1, div0);
-    			append_dev(div0, span);
+    			insert_dev(target, div, anchor);
+    			append_dev(div, span);
     			append_dev(span, t);
 
     			if (!mounted) {
-    				dispose = listen_dev(div0, "click", /*emitPoints*/ ctx[2], false, false, false);
+    				dispose = listen_dev(div, "click", /*emitPoints*/ ctx[2], false, false, false);
     				mounted = true;
     			}
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*points*/ 1) set_data_dev(t, /*points*/ ctx[0]);
 
-    			if (dirty & /*selected*/ 2 && div0_class_value !== (div0_class_value = "choice " + (/*selected*/ ctx[1] ? 'selected' : '') + " svelte-1v9eu5q")) {
-    				attr_dev(div0, "class", div0_class_value);
+    			if (dirty & /*selected*/ 2 && div_class_value !== (div_class_value = "choice " + (/*selected*/ ctx[1] ? 'selected' : '') + " svelte-1ir9ng4")) {
+    				attr_dev(div, "class", div_class_value);
     			}
     		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div1);
+    			if (detaching) detach_dev(div);
     			mounted = false;
     			dispose();
     		}
