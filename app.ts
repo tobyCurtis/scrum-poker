@@ -70,6 +70,8 @@ async function serveHttp(conn: Deno.Conn) {
             socket.onclose = () => {
                 sockets.delete(uid)
                 players.delete(uid)
+
+                updatePlayers('playerUpdate')
             }; // remove from sockets map
             
             const uid = v4.generate();
