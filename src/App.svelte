@@ -45,6 +45,12 @@
 			players = message.players
 		}
 	})
+
+	setInterval(keepAlive, [10000]);
+
+	function keepAlive() {
+		ws.send(JSON.serialize({type: 'heartbeat'}))
+	}
 </script>
 
 <div class="container">

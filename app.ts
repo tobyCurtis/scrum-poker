@@ -59,8 +59,10 @@ async function serveHttp(conn: Deno.Conn) {
                     players.forEach(player => {
                         player.points = undefined
                     })
-
+                    
                     updatePlayers(message.type)
+                } else if (message.type === 'heartbeat') {
+                    console.log('boop')
                 } else {
                     console.log('message is', message)
                 }
