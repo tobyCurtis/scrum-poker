@@ -2,7 +2,7 @@
 	import Card from './components/Card.svelte'
 	import Choice from './components/Choice.svelte'
 	import Modal from './components/Modal.svelte'
-	let wshost = location.origin.replace(/^https/, 'ws') + '/ws'
+	let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
 	console.log(wshost)
 	let ws = new WebSocket(wshost)
 

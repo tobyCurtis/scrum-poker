@@ -1133,7 +1133,7 @@ var app = (function () {
     		c: function create() {
     			button = element("button");
     			button.textContent = "Vote Next Issue";
-    			add_location(button, file, 64, 3, 1691);
+    			add_location(button, file, 64, 3, 1690);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -1172,7 +1172,7 @@ var app = (function () {
     		c: function create() {
     			button = element("button");
     			button.textContent = "Show Cards";
-    			add_location(button, file, 62, 3, 1614);
+    			add_location(button, file, 62, 3, 1613);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -1323,7 +1323,7 @@ var app = (function () {
     		c: function create() {
     			input = element("input");
     			attr_dev(input, "placeholder", "enter your name");
-    			add_location(input, file, 81, 2, 2039);
+    			add_location(input, file, 81, 2, 2038);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -1366,7 +1366,7 @@ var app = (function () {
     			h2 = element("h2");
     			h2.textContent = "...do I know you?";
     			attr_dev(h2, "slot", "header");
-    			add_location(h2, file, 78, 2, 1989);
+    			add_location(h2, file, 78, 2, 1988);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h2, anchor);
@@ -1398,7 +1398,7 @@ var app = (function () {
     			button = element("button");
     			button.textContent = "Submit";
     			attr_dev(button, "slot", "footer");
-    			add_location(button, file, 82, 2, 2097);
+    			add_location(button, file, 82, 2, 2096);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -1501,15 +1501,15 @@ var app = (function () {
     			if (if_block1) if_block1.c();
     			if_block1_anchor = empty();
     			attr_dev(h1, "class", "svelte-3edshr");
-    			add_location(h1, file, 51, 1, 1311);
+    			add_location(h1, file, 51, 1, 1310);
     			attr_dev(div0, "class", "flex-container svelte-3edshr");
-    			add_location(div0, file, 54, 1, 1338);
+    			add_location(div0, file, 54, 1, 1337);
     			attr_dev(div1, "class", "button-container svelte-3edshr");
-    			add_location(div1, file, 60, 1, 1517);
+    			add_location(div1, file, 60, 1, 1516);
     			attr_dev(div2, "class", "flex-container svelte-3edshr");
-    			add_location(div2, file, 68, 1, 1764);
+    			add_location(div2, file, 68, 1, 1763);
     			attr_dev(div3, "class", "container svelte-3edshr");
-    			add_location(div3, file, 50, 0, 1286);
+    			add_location(div3, file, 50, 0, 1285);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1692,7 +1692,7 @@ var app = (function () {
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('App', slots, []);
-    	let wshost = location.origin.replace(/^https/, 'ws') + '/ws';
+    	let wshost = location.origin.replace(/^http/, 'ws') + '/ws';
     	console.log(wshost);
     	let ws = new WebSocket(wshost);
     	let showNameSelection = true;
