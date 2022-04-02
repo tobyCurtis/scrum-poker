@@ -3,8 +3,8 @@
 	import Choice from './components/Choice.svelte'
 	import Modal from './components/Modal.svelte'
 	const heartbeatTimeInMilliseconds = 50000
-	// let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
-	let wshost = 'ws://localhost:3000/ws'
+	let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
+	// let wshost = 'ws://localhost:3000/ws'
 	let ws = new WebSocket(wshost)
 
 	let showNameSelection = true
