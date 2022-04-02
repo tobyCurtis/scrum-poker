@@ -1,3 +1,6 @@
+// deno-lint-ignore-file
+
+// deno-lint-ignore import-prefix-missing
 import svelte from 'rollup-plugin-svelte';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
@@ -5,7 +8,8 @@ import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 
-const production = true;
+const production = !process.env.ROLLUP_WATCH;
+console.log('production', production)
 
 function serve() {
 	let server;
@@ -34,8 +38,7 @@ export default {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		// file: 'public/build/bundle.js'
-		file: 'poker/bundle.js'
+		file: production ? 'poker/bundle.js' : 'public/build/bundle.js'
 	},
 	plugins: [
 		svelte({

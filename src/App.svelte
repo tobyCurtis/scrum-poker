@@ -3,7 +3,8 @@
 	import Choice from './components/Choice.svelte'
 	import Modal from './components/Modal.svelte'
 	const heartbeatTimeInMilliseconds = 50000
-	let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
+	// let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
+	let wshost = 'ws://localhost:3000/ws'
 	let ws = new WebSocket(wshost)
 
 	let showNameSelection = true
@@ -14,15 +15,21 @@
 	let cardsFlipped = false
 	
 	function joinTheTable() {
-		showNameSelection = false
-		ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
+		if(name) {
+			showNameSelection = false
+			ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
+		} else {
+			alert('please enter a name')
+		}
 	}
 	
 	function sendPoints(event) {
-		let points = event.detail.points
-		if(points === mySelection) points = null
-		mySelection = points
-		ws.send(JSON.stringify({type: 'playerUpdate', user: name, points}))
+		if(cardsFlipped === false) {
+			let points = event.detail.points
+			if(points === mySelection) points = null
+			mySelection = points
+			ws.send(JSON.stringify({type: 'playerUpdate', user: name, points}))
+		}
 	}
 
 	function cardFlip() {
@@ -49,33 +56,46 @@
 
 	setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
 	function keepAlive() {
-		ws.send(JSON.stringify({type: 'heartbeat'}))
+		try {
+			ws.send(JSON.stringify({type: 'heartbeat'}))
+		} catch (error) {
+			console.log('error', error)
+			let refresh = confirm('Hit a snag, refresh?')
+			if(refresh) location.reload()
+		}
 	}
 </script>
 
 <div class="container">
-	<h1>
-		Scrum Poker
-	</h1>
+	<section class="style-one">
+		<div class="wordart">
+			<h1 class="preview">
+				Scrum Poker
+			</h1>
+		</div>
+	</section>
 	<div class="flex-container">
 		{#each players as {user, points}, i}
-			<Card hasSelection={points} text={cardsFlipped && points || 'I am card'} name={user}/>
+			<Card hasSelection={points} text={points} flipped={cardsFlipped} name={user}/>
 		{/each}
 	</div>
 	
 	<div class="button-container">
-		{#if players.find(player => player.points) && !cardsFlipped}
+		{#if players.length && !players.find(player => !player.points) && !cardsFlipped}
 			<button on:click={cardFlip}>Show Cards</button>
 		{:else if cardsFlipped}
 			<button on:click={nextIssue}>Vote Next Issue</button>
 		{/if}
 	</div>
 	
-	<div class="flex-container">
-		{#each pointOptions as pointValue, i}
-			<Choice points={pointValue} selected={pointValue === mySelection} on:click={sendPoints} />
-		{/each}
-	</div>
+	{#if !showNameSelection }
+		<div class="flex-container">
+			{#each pointOptions as pointValue, i}
+				<Choice points={pointValue} selected={pointValue === mySelection} on:click={sendPoints} />
+			{/each}
+		</div>
+	{/if}
+
 </div>
 
 
@@ -84,7 +104,9 @@
 		<h2 slot="header">
 			...do I know you?
 		</h2>
-		<input bind:value={name} placeholder="enter your name">
+		<form on:submit={joinTheTable}>
+			<input tabindex="0" type="text" bind:value={name} placeholder="enter your name" autofocus>
+		</form>
 		<button slot="footer" on:click={joinTheTable}>Submit</button>
 	</Modal>
 {/if}

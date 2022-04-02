@@ -3,10 +3,10 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sahcurity Team Apps</title>
-    <style>
+    <link rel='icon' type='image/png' href='/favicon.png'>
 
-    </style>
+    <title>Sahcurity</title>
+    
 </head>
 <body>
     <h1>
@@ -17,26 +17,5 @@
             <a href="/poker">pokie</a>
         </li>
     </ul>
-
-    <script>
-        let ws = new WebSocket('ws://localhost:3000/ws');
-
-        let card = document.querySelector('.card')
-
-        for(const choice of  document.querySelectorAll('.choice')) {
-            choice.addEventListener('click', (e) => {
-                let points = e.target.innerHTML
-                ws.send(JSON.stringify({user: 'Toby', points}))
-            })
-        }
-
-        ws.addEventListener('message', msg => {
-            ({user, points} = JSON.parse(msg.data))
-            console.log('user', user)
-            console.log('points', points)
-            card.innerHTML = points
-        })
-
-    </script>
 </body>
 </html>

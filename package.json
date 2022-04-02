@@ -1,10 +1,11 @@
 {
-  "name": "svelte-app",
+  "name": "scrum-poker",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
+    "deno": "denon run --allow-net --allow-read --allow-env app.ts",
     "start": "sirv public --no-clear"
   },
   "devDependencies": {

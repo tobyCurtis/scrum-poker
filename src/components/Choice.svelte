@@ -19,17 +19,20 @@
 
 <style>
 	.choice {
-		font-weight: bold;
+		margin-bottom: 10px;
 		width: 50px;
 		height: 100px;
 		border-radius: 10%;
-		border: 1px solid blue;
+		border: 2px solid #3993ff;
 		background-color: white;
 		text-align: center;
 		color: #333;
         display: flex;
         align-items: center;
         justify-content: center;
+		color: #3993ff;
+        font-size: 30px;
+        font-weight: 700;
 	}
 
 	.selected {

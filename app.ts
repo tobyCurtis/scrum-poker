@@ -7,12 +7,12 @@ interface Player {
     points?: number;
 }
 
-let sockets = new Map<string, WebSocket>();
-let players = new Map<string, Player>();
+const sockets = new Map<string, WebSocket>();
+const players = new Map<string, Player>();
 
 const port = parseInt(Deno.env.get('PORT') ?? '3000');
 const server = Deno.listen({ port });
-console.log('http://localhost:3000')
+console.log(`:${port}`)
 
 for await (const conn of server) {
   serveHttp(conn);
