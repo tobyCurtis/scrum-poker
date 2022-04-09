@@ -13,6 +13,44 @@ body {
 	background-color: whitesmoke;
 }
 
+.flex {
+	display: flex;
+}
+
+.flex-center {
+	align-items: center;
+	justify-content: center;
+}
+
+.flex-wrap {
+	flex-wrap: wrap;
+}
+
+.flex-gap {
+	gap: 10px;
+}
+
+.text-center {
+	text-align: center;
+}
+
+.font-size_large {
+	font-size: 1.5em;
+}
+
+.name-modal {
+	min-width: 300px;
+}
+
+.playing-card {
+	min-width: 80px;
+	min-height: 120px;
+}
+
+.selected-card {
+	background-color: #d9ccef !important;
+}
+
 a {
 	color: rgb(0,100,200);
 	text-decoration: none;

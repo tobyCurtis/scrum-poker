@@ -1,7 +1,10 @@
 <script>
 	import Card from './components/Card.svelte'
+	import PlayingCard from './components/PlayingCard.svelte'
 	import Choice from './components/Choice.svelte'
-	import Modal from './components/Modal.svelte'
+	import Flip from './components/Flip.svelte'
+	import { Button, Modal, Dialog, TextField, Headline, Divider, H2 } from 'attractions';
+
 	const heartbeatTimeInMilliseconds = 50000
 	let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
 	// let wshost = 'ws://localhost:3000/ws'
@@ -9,23 +12,25 @@
 
 	let showNameSelection = true
 	let name = ''
+	let nameErrors = []
 	let pointOptions = [1, 2, 3, 5, 8, 13]
 	let mySelection = null
 	let players = []
 	let cardsFlipped = false
+	let playersStillChoosing = ''
 	
 	function joinTheTable() {
 		if(name) {
 			showNameSelection = false
 			ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
 		} else {
-			alert('please enter a name')
+			nameErrors = ['No Anons :(']
 		}
 	}
 	
 	function sendPoints(event) {
 		if(cardsFlipped === false) {
-			let points = event.detail.points
+			let points = event.detail.value
 			if(points === mySelection) points = null
 			mySelection = points
 			ws.send(JSON.stringify({type: 'playerUpdate', user: name, points}))
@@ -45,6 +50,7 @@
 
 		if(message.type === 'playerUpdate') {
 			players = message.players
+			playersStillChoosing = getPlayersStillChoosing()
 		} else if (message.type === 'cardFlip') {
 			cardsFlipped = true
 		} else if (message.type === 'nextIssue') {
@@ -64,34 +70,54 @@
 			if(refresh) location.reload()
 		}
 	}
+
+	function getPlayersStillChoosing() {
+		let playersStillThinking = players.filter(player => player.points === null).map(player => player.user)
+
+		if(playersStillThinking.length <= 2) {
+			return playersStillThinking.join(' and ')
+		} else {
+			playersStillThinking[playersStillThinking.length - 1] = ` and ${playersStillThinking[playersStillThinking.length - 1]}`
+			return playersStillThinking.join(', ')
+		}
+	}
 </script>
 
 <div class="container">
-	<section class="style-one">
-		<div class="wordart">
-			<h1 class="preview">
-				Scrum Poker
-			</h1>
-		</div>
-	</section>
-	<div class="flex-container">
-		{#each players as {user, points}, i}
-			<Card hasSelection={points} text={points} flipped={cardsFlipped} name={user}/>
-		{/each}
-	</div>
-	
-	<div class="button-container">
-		{#if players.length && !players.find(player => !player.points) && !cardsFlipped}
-			<button on:click={cardFlip}>Show Cards</button>
-		{:else if cardsFlipped}
-			<button on:click={nextIssue}>Vote Next Issue</button>
-		{/if}
-	</div>
-	
 	{#if !showNameSelection }
-		<div class="flex-container">
+		<Headline class="flex flex-center">
+			Scrum Poker
+		</Headline>
+		<Divider />
+		<div class="flex flex-center flex-wrap flex-gap">
+			{#each players as {user, points}, i}
+				<div>
+					<Flip flipped={cardsFlipped} class="playing-card">
+						<PlayingCard slot="front" selected={!!points} />
+						<PlayingCard slot="back" value={points || ''} />
+					</Flip>
+					<p class="text-center">{user}</p>
+				</div>
+			{/each}
+		</div>
+		
+		<div class="flex flex-center actions">
+
+			{#if mySelection === null}
+				<H2>Pick a card</H2>
+			{:else if cardsFlipped}
+				<Button on:click={nextIssue}>Vote Next Issue</Button>
+			{:else if players.length && !players.find(player => !player.points) && !cardsFlipped}
+				<Button on:click={cardFlip}>Show Cards</Button>
+			{:else}
+				<H2>Waiting for {playersStillChoosing} to choose</H2>
+			{/if}
+
+		</div>
+	
+		<div class="flex flex-center flex-wrap flex-gap">
 			{#each pointOptions as pointValue, i}
-				<Choice points={pointValue} selected={pointValue === mySelection} on:click={sendPoints} />
+				<PlayingCard value={pointValue} selected={mySelection === pointValue} on:click={sendPoints} />
 			{/each}
 		</div>
 	{/if}
@@ -100,22 +126,33 @@
 
 
 {#if showNameSelection}
-	<Modal>
-		<h2 slot="header">
-			...do I know you?
-		</h2>
-		<form on:submit={joinTheTable}>
-			<input tabindex="0" type="text" bind:value={name} placeholder="enter your name" autofocus>
+	<Modal bind:open={showNameSelection}>
+	  <Dialog title="What's your name?" class="name-modal">
+		<form on:submit={joinTheTable} style="margin-bottom: 8px">
+			<TextField
+				placeholder="The Guttmanator"
+				bind:value={name}
+				tabindex="0"
+				error={nameErrors}
+			/>
 		</form>
-		<button slot="footer" on:click={joinTheTable}>Submit</button>
+		<Button on:click={joinTheTable}>Submit</Button>
+	  </Dialog>
 	</Modal>
 {/if}
 
 <style>
 	h1 {
 		text-align: center;
+		font-size: 35px;
+		color: #3993ff;
+		margin-bottom: 0;
 	}
 
+
+	hr {
+		border-top: 1px dotted #3993ff;
+	}
 	.container {
 		max-width: 40%;
 		margin: 0 auto;
@@ -129,16 +166,9 @@
 
 	}
 
-	.button-container {
-		margin-top: 40px;
-		height: 40px;
-		text-align: center;
+	.actions {
+		margin: 20px 0 20px 0;
+		height: 51px;
 	}
 
-	.flex-container {
-		margin-top: 40px;
-		display: flex;
-		justify-content: space-between;
-		flex-wrap: wrap;
-	}
 </style>

@@ -1,20 +1,26 @@
 <script>
-    export let text;
-    export let name;
-    export let hasSelection;
-    export let flipped;
-    import { Label, H2 } from 'attractions';
+    export let value = '';
+    export let selected;
+    import { Card } from 'attractions';
+
+    import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
+
+	function emitValue() {
+		dispatch('click', {
+			value
+		});
+	}
 </script>
 
-<div class="user-card-container">
-	<div class="card {flipped ? '' : 'cardBack'} {hasSelection && !flipped ? 'selected' : ''}">
-        <H2>{flipped ? text : ''}</H2>
-    </div>
-	<H2>{name}</H2>
+<div on:click={emitValue}>
+    <Card outline tight class="flex flex-center font-size_large playing-card {selected && 'selected-card'}">
+        {value}
+    </Card>
 </div>
 
 <style>
-	.user-card-container {
+	/* .user-card-container {
 		text-align: center;
 		width: 50px;
         display: flex;
@@ -52,5 +58,5 @@
         background-image:  linear-gradient(30deg, #0064fa 12%, transparent 12.5%, transparent 87%, #0064fa 87.5%, #0064fa), linear-gradient(150deg, #0064fa 12%, transparent 12.5%, transparent 87%, #0064fa 87.5%, #0064fa), linear-gradient(30deg, #0064fa 12%, transparent 12.5%, transparent 87%, #0064fa 87.5%, #0064fa), linear-gradient(150deg, #0064fa 12%, transparent 12.5%, transparent 87%, #0064fa 87.5%, #0064fa), linear-gradient(60deg, #0064fa77 25%, transparent 25.5%, transparent 75%, #0064fa77 75%, #0064fa77), linear-gradient(60deg, #0064fa77 25%, transparent 25.5%, transparent 75%, #0064fa77 75%, #0064fa77);
         background-size: 20px 35px;
         background-position: 0 0, 0 0, 10px 18px, 10px 18px, 0 0, 10px 18px;
-    }
+    } */
 </style>
