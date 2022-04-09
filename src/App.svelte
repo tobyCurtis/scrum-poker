@@ -4,9 +4,8 @@
 	import { Button, Modal, Dialog, TextField, Headline, Divider, H2 } from 'attractions';
 
 	const heartbeatTimeInMilliseconds = 50000
-	let wshost = location.origin.replace(/^http/, 'ws') + '/ws'
-	// let wshost = 'ws://localhost:3000/ws'
-	let ws = new WebSocket(wshost)
+	const wshost = production ? location.origin.replace(/^http/, 'ws') + '/ws' : 'ws://localhost:3000/ws'
+	const ws = new WebSocket(wshost)
 
 	let showNameSelection = true
 	let name = ''
@@ -16,6 +15,7 @@
 	let players = []
 	let cardsFlipped = false
 	let playersStillChoosing = ''
+	let waitingForMessage = false
 	
 	function joinTheTable() {
 		if(name) {
@@ -31,6 +31,7 @@
 			let points = event.detail.value
 			if(points === mySelection) points = null
 			mySelection = points
+			waitingForMessage = true
 			ws.send(JSON.stringify({type: 'playerUpdate', user: name, points}))
 		}
 	}
@@ -44,6 +45,7 @@
 	}
 
 	ws.addEventListener('message', msg => {
+		waitingForMessage = false
 		let message = JSON.parse(msg.data)
 
 		if(message.type === 'playerUpdate') {
@@ -101,17 +103,17 @@
 		</div>
 		
 		<div class="flex flex-center actions">
-
-			{#if mySelection === null}
-				<H2>Pick a card</H2>
-			{:else if cardsFlipped}
-				<Button on:click={nextIssue}>Vote Next Issue</Button>
-			{:else if players.length && !players.find(player => !player.points) && !cardsFlipped}
-				<Button on:click={cardFlip}>Show Cards</Button>
-			{:else}
-				<H2>Waiting for {playersStillChoosing} to choose</H2>
+			{#if !waitingForMessage}
+				{#if mySelection === null}
+					<H2>Pick a card</H2>
+				{:else if cardsFlipped}
+					<Button on:click={nextIssue}>Vote Next Issue</Button>
+				{:else if players.length && !players.find(player => !player.points) && !cardsFlipped}
+					<Button on:click={cardFlip}>Show Cards</Button>
+				{:else}
+					<H2>Waiting for {playersStillChoosing} to choose</H2>
+				{/if}
 			{/if}
-
 		</div>
 	
 		<div class="flex flex-center flex-wrap flex-gap">
