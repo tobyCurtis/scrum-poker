@@ -1,7 +1,5 @@
 <script>
-	import Card from './components/Card.svelte'
 	import PlayingCard from './components/PlayingCard.svelte'
-	import Choice from './components/Choice.svelte'
 	import Flip from './components/Flip.svelte'
 	import { Button, Modal, Dialog, TextField, Headline, Divider, H2 } from 'attractions';
 
@@ -72,7 +70,8 @@
 	}
 
 	function getPlayersStillChoosing() {
-		let playersStillThinking = players.filter(player => player.points === null).map(player => player.user)
+		let playersStillThinking = players.filter(player => !player.points).map(player => player.user)
+		console.log('choose players', playersStillThinking)
 
 		if(playersStillThinking.length <= 2) {
 			return playersStillThinking.join(' and ')
@@ -142,17 +141,6 @@
 {/if}
 
 <style>
-	h1 {
-		text-align: center;
-		font-size: 35px;
-		color: #3993ff;
-		margin-bottom: 0;
-	}
-
-
-	hr {
-		border-top: 1px dotted #3993ff;
-	}
 	.container {
 		max-width: 40%;
 		margin: 0 auto;
