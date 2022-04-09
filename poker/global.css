@@ -45,6 +45,7 @@ body {
 .playing-card {
 	min-width: 80px;
 	min-height: 120px;
+	color: #4300B6;
 }
 
 .selected-card {
