@@ -45,7 +45,7 @@ export default {
 	},
 	plugins: [
 		replace({
-			production: production
+			production
 		}),
 		svelte({
 			...svelteConfig,

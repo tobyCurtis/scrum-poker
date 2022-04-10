@@ -95,7 +95,7 @@
 				<div>
 					<Flip flipped={cardsFlipped} class="playing-card">
 						<PlayingCard slot="front" selected={!!points} />
-						<PlayingCard slot="back" value={points || ''} />
+						<PlayingCard slot="back" value={cardsFlipped && points || ''} />
 					</Flip>
 					<p class="text-center">{user}</p>
 				</div>
