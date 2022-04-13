@@ -3,10 +3,13 @@
 	import Flip from './components/Flip.svelte'
 	import { Button, Modal, Dialog, TextField, Headline, Divider, H2 } from 'attractions';
 
+	import { chart } from "svelte-apexcharts";
+	
 	const heartbeatTimeInMilliseconds = 50000
 	const wshost = production ? location.origin.replace(/^http/, 'ws') + '/ws' : 'ws://localhost:3000/ws'
 	const ws = new WebSocket(wshost)
-
+	
+	let options = {}
 	let showNameSelection = true
 	let name = ''
 	let nameErrors = []
@@ -52,6 +55,7 @@
 			players = message.players
 			playersStillChoosing = getPlayersStillChoosing()
 		} else if (message.type === 'cardFlip') {
+			generateOptions()
 			cardsFlipped = true
 		} else if (message.type === 'nextIssue') {
 			mySelection = null
@@ -82,6 +86,59 @@
 			return playersStillThinking.join(', ')
 		}
 	}
+
+	function generateOptions() {
+		let pointChoices = {}
+		players.forEach(player => {
+			if(pointChoices[player.points]) {
+				pointChoices[player.points]++
+			} else {
+				pointChoices[player.points] = 1
+			}
+		})
+
+		options = {
+			colors: ['#4300b0'],
+			grid: {
+				show: false	
+			},
+			chart: {
+				type: "bar",
+				toolbar: false,
+				zoom: {
+					enabled: false
+				}
+			},
+			states: {
+				hover: {
+					filter: {
+						type: 'none',
+						value: 0
+					}
+				},
+				active: {
+					filter: {
+						type: 'none',
+						value: 0
+					}
+				},
+			},
+			series: [{
+				name: "sales",
+				data: Object.values(pointChoices),
+			}],
+			xaxis: {
+				categories: Object.keys(pointChoices),
+			},
+			yaxis: {
+				show: false,
+			},
+			tooltip: {
+				enabled: false
+			}
+		};
+	}
+
 </script>
 
 <div class="container">
@@ -121,6 +178,12 @@
 				<PlayingCard value={pointValue} selected={mySelection === pointValue} on:click={sendPoints} />
 			{/each}
 		</div>
+
+		{#if cardsFlipped}
+			<div class="flex flex-center flex-wrap">
+				<div use:chart={options} />
+			</div>
+		{/if}
 	{/if}
 
 </div>
