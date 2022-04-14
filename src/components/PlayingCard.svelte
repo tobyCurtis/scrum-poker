@@ -1,6 +1,6 @@
 <script>
     export let value = '';
-    export let selected;
+    export let selected = false;
     import { Card } from 'attractions';
 
     import { createEventDispatcher } from 'svelte';

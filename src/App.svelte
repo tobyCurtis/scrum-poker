@@ -4,7 +4,8 @@
 	import { Button, Modal, Dialog, TextField, Headline, Divider, H2 } from 'attractions';
 
 	import { chart } from "svelte-apexcharts";
-	
+	import ConfettiGenerator from "confetti-js";
+
 	const heartbeatTimeInMilliseconds = 50000
 	const wshost = production ? location.origin.replace(/^http/, 'ws') + '/ws' : 'ws://localhost:3000/ws'
 	const ws = new WebSocket(wshost)
@@ -19,7 +20,30 @@
 	let cardsFlipped = false
 	let playersStillChoosing = ''
 	let waitingForMessage = false
+	let confetti = {}
 	
+	function checkForConfetti() {
+		let choices = players.reduce((allPoints, player) => {
+			allPoints[player.points] = true
+			return allPoints
+		}, {})
+
+		if(Object.keys(choices).length === 1) {
+			doConfetti()
+		}
+	}
+
+	function doConfetti() {
+		confetti = new ConfettiGenerator({ 
+			target: 'confetti',
+		});
+		confetti.render();
+	}
+
+	function stopConfetti() {
+		if(confetti.clear) confetti.clear();
+	}
+
 	function joinTheTable() {
 		if(name) {
 			showNameSelection = false
@@ -55,9 +79,11 @@
 			players = message.players
 			playersStillChoosing = getPlayersStillChoosing()
 		} else if (message.type === 'cardFlip') {
+			checkForConfetti()
 			generateOptions()
 			cardsFlipped = true
 		} else if (message.type === 'nextIssue') {
+			stopConfetti()
 			mySelection = null
 			cardsFlipped = false
 			players = message.players
@@ -69,7 +95,6 @@
 		try {
 			ws.send(JSON.stringify({type: 'heartbeat'}))
 		} catch (error) {
-			console.log('error', error)
 			let refresh = confirm('Hit a snag, refresh?')
 			if(refresh) location.reload()
 		}
@@ -77,7 +102,6 @@
 
 	function getPlayersStillChoosing() {
 		let playersStillThinking = players.filter(player => !player.points).map(player => player.user)
-		console.log('choose players', playersStillThinking)
 
 		if(playersStillThinking.length <= 2) {
 			return playersStillThinking.join(' and ')
@@ -104,7 +128,9 @@
 			},
 			chart: {
 				type: "bar",
-				toolbar: false,
+				toolbar: {
+					show: false
+				},
 				zoom: {
 					enabled: false
 				}
@@ -125,10 +151,10 @@
 			},
 			series: [{
 				name: "sales",
-				data: Object.values(pointChoices),
+				data: Object.values(pointChoices) || [],
 			}],
 			xaxis: {
-				categories: Object.keys(pointChoices),
+				categories: Object.keys(pointChoices) || [],
 			},
 			yaxis: {
 				show: false,
@@ -139,53 +165,67 @@
 		};
 	}
 
+	function getRandomName() {
+		let firstNames = ['Berthefried', 'Tatiana', 'Hildeburg', 'Bilbo', 'Frodo', 'Theodulph', 'Poppy', 'Daddy', 'Hilda', 'Falco', 'Bandobras','Odo','Eglantine','Gerontius','Samwise','Gorbadoc','Gormadoc','Griffo','Lotho','Andwise','Bungo','Bilbo','Mungo','Balbo','Bingo','Dudo','Drogo','Elfstan','Ferdibrand','Meriadoc','Peregrin','Hamfast','Rosamunda','Menegilda','Wiseman','Wilcom','Merry','Asphodel','Firiel','Hildigrim','Donnamira','Rosie','Filibert','Sigismond','Isembold','Hugo','Lalia','Marmadoc','Saradoc','Primula','Tobold','Mimosa','Orgulas','Frodo','Lobelia','Togo','Celandine','Wilibald','Robin','Ted','Adaldrida','Will','Adamanta','Belladonna','Flambard','Adalgrim','Hob',]
+		let lastNames = ['Baggins', 'Lightfoot', 'Boulderhill', 'Bolger','Twofoot','Bracegirdle','Chubb-Baggins','Bullroarer','Proudfoot','Took','Gamgee','Broadbelt','Deepdelver','Boffin','Pimple','Roper','Baggins','Fairbarn','Brandybuck','Goold','Gamwich','Jolly','Gardner','Burrows','Fairbairn','Cotton','Clayhanger','Masterful','Scattergold','Hornblower','Bunce','Sackville-Baggins','Goodbody','Smallburrow','Sandyman','Whitfoot','Hayward']
+
+		return `${pickRandom(firstNames)} ${pickRandom(lastNames)}`;
+	}
+
+	function pickRandom(list) {
+		return list[Math.floor(Math.random() * list.length)];
+	}
+
 </script>
 
-<div class="container">
-	{#if !showNameSelection }
-		<Headline class="flex flex-center">
-			Scrum Poker
-		</Headline>
-		<Divider />
-		<div class="flex flex-center flex-wrap flex-gap">
-			{#each players as {user, points}, i}
-				<div>
-					<Flip flipped={cardsFlipped} class="playing-card">
-						<PlayingCard slot="front" selected={!!points} />
-						<PlayingCard slot="back" value={cardsFlipped && points || ''} />
-					</Flip>
-					<p class="text-center">{user}</p>
-				</div>
-			{/each}
-		</div>
-		
-		<div class="flex flex-center actions">
-			{#if !waitingForMessage}
-				{#if mySelection === null}
-					<H2>Pick a card</H2>
-				{:else if cardsFlipped}
-					<Button on:click={nextIssue}>Vote Next Issue</Button>
-				{:else if players.length && !players.find(player => !player.points) && !cardsFlipped}
-					<Button on:click={cardFlip}>Show Cards</Button>
-				{:else}
-					<H2>Waiting for {playersStillChoosing} to choose</H2>
-				{/if}
-			{/if}
-		</div>
-	
-		<div class="flex flex-center flex-wrap flex-gap">
-			{#each pointOptions as pointValue, i}
-				<PlayingCard value={pointValue} selected={mySelection === pointValue} on:click={sendPoints} />
-			{/each}
-		</div>
-
-		{#if cardsFlipped}
-			<div class="flex flex-center flex-wrap">
-				<div use:chart={options} />
+<div id="entirePage">
+	<canvas id="confetti"></canvas>
+	<div class="container">
+		{#if !showNameSelection }
+			<Headline class="flex flex-center">
+				Scrum Poker
+			</Headline>
+			<Divider />
+			<div class="flex flex-center flex-wrap flex-gap">
+				{#each players as {user, points}, i}
+					<div class="flex flex-column flex-center">
+						<Flip flipped={cardsFlipped} class="playing-card">
+							<PlayingCard slot="front" selected={!!points} />
+							<PlayingCard slot="back" value={cardsFlipped && points || ''} />
+						</Flip>
+						<p class="text-center">{user}</p>
+					</div>
+				{/each}
 			</div>
+			
+			<div class="flex flex-center actions">
+				{#if !waitingForMessage}
+					{#if mySelection === null}
+						<H2>Pick a card</H2>
+					{:else if cardsFlipped}
+						<Button on:click={nextIssue}>Vote Next Issue</Button>
+					{:else if players.length && !players.find(player => !player.points) && !cardsFlipped}
+						<Button on:click={cardFlip}>Show Cards</Button>
+					{:else}
+						<H2>Waiting for {playersStillChoosing} to choose</H2>
+					{/if}
+				{/if}
+			</div>
+		
+			<div class="flex flex-center flex-wrap flex-gap">
+				{#each pointOptions as pointValue, i}
+					<PlayingCard value={pointValue} selected={mySelection === pointValue} on:click={sendPoints} />
+				{/each}
+			</div>
+	
+			{#if cardsFlipped}
+				<div class="flex flex-center flex-wrap">
+					<div use:chart={options} />
+				</div>
+			{/if}
 		{/if}
-	{/if}
-
+	
+	</div>
 </div>
 
 
@@ -194,7 +234,7 @@
 	  <Dialog title="What's your name?" class="name-modal">
 		<form on:submit={joinTheTable} style="margin-bottom: 8px">
 			<TextField
-				placeholder="The Guttmanator"
+				placeholder={getRandomName()}
 				bind:value={name}
 				tabindex="0"
 				error={nameErrors}
@@ -207,8 +247,17 @@
 
 <style>
 	.container {
-		max-width: 40%;
+		max-width: 70%;
 		margin: 0 auto;
+		position: relative;
+	}
+	
+	#entirePage {
+		position: relative;
+	}
+
+	#confetti {
+		position: absolute;
 	}
 
 	@media only screen and (max-width: 700px) {
@@ -222,6 +271,7 @@
 	.actions {
 		margin: 20px 0 20px 0;
 		height: 51px;
+		text-align: center;
 	}
 
 </style>
