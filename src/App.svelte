@@ -230,7 +230,7 @@
 
 
 {#if showNameSelection}
-	<Modal bind:open={showNameSelection}>
+	<Modal bind:open={showNameSelection} noClickaway>
 	  <Dialog title="What's your name?" class="name-modal">
 		<form on:submit={joinTheTable} style="margin-bottom: 8px">
 			<TextField
