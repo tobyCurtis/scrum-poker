@@ -8,8 +8,9 @@
 
 	const heartbeatTimeInMilliseconds = 50000
 	const wshost = production ? location.origin.replace(/^http/, 'ws') + '/ws' : 'ws://localhost:3000/ws'
-	const ws = new WebSocket(wshost)
-	
+	let ws
+	initWebSocket() 
+
 	let options = {}
 	let showNameSelection = true
 	let isSpectator = false
@@ -77,36 +78,41 @@
 		ws.send(JSON.stringify({type: 'nextIssue'}))
 	}
 
-	ws.addEventListener('message', msg => {
-		waitingForMessage = false
-		let message = JSON.parse(msg.data)
+	function initWebSocket() {
+		ws = new WebSocket(wshost)
 
-		if(message.type === 'playerUpdate') {
-			players = message.players
-			playersStillChoosing = getPlayersStillChoosing()
-		} else if (message.type === 'cardFlip') {
-			checkForConfetti()
-			generateOptions()
-			cardsFlipped = true
-		} else if (message.type === 'nextIssue') {
-			stopConfetti()
-			mySelection = null
-			cardsFlipped = false
-			players = message.players
-		} else if (message.type === 'heartbeat') {
-			console.log('heartbeat response')
-		}
-	})
+		ws.addEventListener('message', msg => {
+			waitingForMessage = false
+			let message = JSON.parse(msg.data)
+	
+			if(message.type === 'playerUpdate') {
+				players = message.players
+				playersStillChoosing = getPlayersStillChoosing()
+			} else if (message.type === 'cardFlip') {
+				checkForConfetti()
+				generateOptions()
+				cardsFlipped = true
+			} else if (message.type === 'nextIssue') {
+				stopConfetti()
+				mySelection = null
+				cardsFlipped = false
+				players = message.players
+			} else if (message.type === 'heartbeat') {
+				console.log('heartbeat response')
+			}
+		})
 
-	setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
-	function keepAlive() {
-		try {
-			ws.send(JSON.stringify({type: 'heartbeat'}))
-		} catch (error) {
-			let refresh = confirm('Hit a snag, refresh?')
-			if(refresh) location.reload()
+		setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
+		function keepAlive() {
+			try {
+				ws.send(JSON.stringify({type: 'heartbeat'}))
+			} catch (error) {
+				let refresh = confirm('Hit a snag, refresh?')
+				if(refresh) location.reload()
+			}
 		}
 	}
+
 
 	function getPlayersStillChoosing() {
 		let playersStillThinking = players.filter(player => !player.points).map(player => player.user)
@@ -183,6 +189,22 @@
 	function pickRandom(list) {
 		return list[Math.floor(Math.random() * list.length)];
 	}
+
+	document.addEventListener("visibilitychange", function() {
+		const websocketNotConnected = ws.readyState !== WebSocket.OPEN
+		const windowIsActive = document.visibilityState === 'visible'
+		console.log('will i do something?', windowIsActive && websocketNotConnected)
+
+		if(windowIsActive && websocketNotConnected) {
+			console.log('dead on return')
+			initWebSocket() 
+
+			if(name) {
+				showNameSelection = false
+				ws.send(JSON.stringify({type: 'playerUpdate', user: name, points}))
+			}
+		}
+	});
 
 </script>
 
