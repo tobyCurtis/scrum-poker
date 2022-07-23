@@ -93,6 +93,8 @@
 			mySelection = null
 			cardsFlipped = false
 			players = message.players
+		} else if (message.type === 'heartbeat') {
+			console.log('heartbeat response')
 		}
 	})
 
