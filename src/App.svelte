@@ -23,7 +23,8 @@
 	let playersStillChoosing = ''
 	let waitingForMessage = false
 	let confetti = {}
-	
+	let placeholderName = getRandomName()
+
 	function checkForConfetti() {
 		let choices = players.reduce((allPoints, player) => {
 			allPoints[player.points] = true
@@ -47,12 +48,9 @@
 	}
 
 	function joinTheTable() {
-		if(name) {
-			showNameSelection = false
-			ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
-		} else {
-			nameErrors = ['No Anons :(']
-		}
+		if(!name) name = placeholderName
+		showNameSelection = false
+		ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
 	}
 
 	function joinSpectator() {
@@ -266,7 +264,7 @@
 	  <Dialog title="What's your name?" class="name-modal">
 		<form on:submit={joinTheTable} style="margin-bottom: 8px">
 			<TextField
-				placeholder={getRandomName()}
+				placeholder={placeholderName}
 				bind:value={name}
 				tabindex="0"
 				error={nameErrors}
