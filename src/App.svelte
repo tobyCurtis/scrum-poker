@@ -199,7 +199,7 @@
 
 			if(name) {
 				showNameSelection = false
-				ws.send(JSON.stringify({type: 'playerUpdate', user: name, points}))
+				ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
 			}
 		}
 	});
