@@ -12,6 +12,7 @@
 	
 	let options = {}
 	let showNameSelection = true
+	let isSpectator = false
 	let name = ''
 	let nameErrors = []
 	let pointOptions = [1, 2, 3, 5, 8, 13]
@@ -51,6 +52,11 @@
 		} else {
 			nameErrors = ['No Anons :(']
 		}
+	}
+
+	function joinSpectator() {
+		isSpectator = true
+		showNameSelection = false
 	}
 	
 	function sendPoints(event) {
@@ -200,7 +206,7 @@
 			
 			<div class="flex flex-center actions">
 				{#if !waitingForMessage}
-					{#if mySelection === null}
+					{#if mySelection === null && isSpectator === false}
 						<H2>Pick a card</H2>
 					{:else if cardsFlipped}
 						<Button on:click={nextIssue}>Vote Next Issue</Button>
@@ -212,11 +218,13 @@
 				{/if}
 			</div>
 		
-			<div class="flex flex-center flex-wrap flex-gap">
-				{#each pointOptions as pointValue, i}
-					<PlayingCard value={pointValue} selected={mySelection === pointValue} on:click={sendPoints} />
-				{/each}
-			</div>
+			{#if !isSpectator}
+				<div class="flex flex-center flex-wrap flex-gap">
+					{#each pointOptions as pointValue, i}
+						<PlayingCard value={pointValue} selected={mySelection === pointValue} on:click={sendPoints} />
+					{/each}
+				</div>
+			{/if}
 	
 			{#if cardsFlipped}
 				<div class="flex flex-center flex-wrap">
@@ -240,7 +248,10 @@
 				error={nameErrors}
 			/>
 		</form>
-		<Button on:click={joinTheTable}>Submit</Button>
+		<div class="flex flex-gap">
+			<Button on:click={joinTheTable}>Let's Pokie</Button>
+			<Button on:click={joinSpectator}>Spectate</Button>
+		</div>
 	  </Dialog>
 	</Modal>
 {/if}
