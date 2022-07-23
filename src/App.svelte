@@ -79,45 +79,50 @@
 	function initWebSocket() {
 		ws = new WebSocket(wshost)
 		console.log('in thing')
-		let connectionCheck = setInterval(() => {
-			const socketConnected = ws.readyState === WebSocket.OPEN
-			
-			if(socketConnected) {
-					console.log('in other thing')
-					ws.addEventListener('message', msg => {
-					waitingForMessage = false
-					let message = JSON.parse(msg.data)
-			
-					if(message.type === 'playerUpdate') {
-						players = message.players
-						playersStillChoosing = getPlayersStillChoosing()
-					} else if (message.type === 'cardFlip') {
-						checkForConfetti()
-						generateOptions()
-						cardsFlipped = true
-					} else if (message.type === 'nextIssue') {
-						stopConfetti()
-						mySelection = null
-						cardsFlipped = false
-						players = message.players
-					} else if (message.type === 'heartbeat') {
-						console.log('heartbeat response')
-					}
-				})
 
-				setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
-				function keepAlive() {
-					try {
-						ws.send(JSON.stringify({type: 'heartbeat'}))
-					} catch (error) {
-						let refresh = confirm('Hit a snag, refresh?')
-						if(refresh) location.reload()
+		return new Promise((resolve, reject) => {
+			let connectionCheck = setInterval(() => {
+				const socketConnected = ws.readyState === WebSocket.OPEN
+				
+				if(socketConnected) {
+						console.log('in other thing')
+						ws.addEventListener('message', msg => {
+						waitingForMessage = false
+						let message = JSON.parse(msg.data)
+				
+						if(message.type === 'playerUpdate') {
+							players = message.players
+							playersStillChoosing = getPlayersStillChoosing()
+						} else if (message.type === 'cardFlip') {
+							checkForConfetti()
+							generateOptions()
+							cardsFlipped = true
+						} else if (message.type === 'nextIssue') {
+							stopConfetti()
+							mySelection = null
+							cardsFlipped = false
+							players = message.players
+						} else if (message.type === 'heartbeat') {
+							console.log('heartbeat response')
+						}
+					})
+	
+					setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
+					function keepAlive() {
+						try {
+							ws.send(JSON.stringify({type: 'heartbeat'}))
+						} catch (error) {
+							let refresh = confirm('Hit a snag, refresh?')
+							if(refresh) location.reload()
+						}
 					}
+	
+					clearInterval(connectionCheck)
+					resolve()
 				}
+			}, 500)
 
-				clearInterval(connectionCheck)
-			}
-		}, 500)
+		})
 	
 	}
 
@@ -205,12 +210,14 @@
 
 		if(windowIsActive && websocketNotConnected) {
 			console.log('dead on return')
-			initWebSocket() 
-
-			if(name) {
+			initWebSocket()
+			.then(() => {
+				if(name) {
+					ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
+				}
 				showNameSelection = false
-				ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
-			}
+			})
+
 		}
 	});
 
