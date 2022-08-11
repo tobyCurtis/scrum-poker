@@ -1,0 +1,15 @@
+import { writable } from 'svelte/store'
+
+// let options = writable({})
+// let showNameSelection = writable(true)
+export const isSpectator = writable(false)
+// let name = writable('')
+// let nameErrors = writable([])
+// let pointOptions = writable([1, 2, 3, 5, 8, 13])
+// let mySelection = writable(null)
+export const players = writable([])
+export const cardsFlipped = writable(false)
+export const playersStillChoosing = writable('')
+export const waitingForMessage = writable(false)
+// let confetti = writable({})
+// let placeholderName = writable(getRandomName())

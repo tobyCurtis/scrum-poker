@@ -51,6 +51,8 @@ async function serveHttp(conn: Deno.Conn) {
                     players.set(uid, message)
 
                     updatePlayers(message.type)
+                } else if (message.type === 'getPlayers') {
+                    updatePlayers(message.type)
                 } else if (message.type === 'cardFlip') {
                     sockets.forEach(socket => {
                         socket.send(JSON.stringify({type: 'cardFlip'}))

@@ -1,7 +1,10 @@
 <script>
 	import PlayingCard from './components/PlayingCard.svelte'
 	import Flip from './components/Flip.svelte'
+	import Header from './components/Header.svelte'
+	import Players from './components/Players.svelte'
 	import { Button, Modal, Dialog, TextField, Headline, Divider, H2 } from 'attractions';
+	import { players, cardsFlipped, waitingForMessage, playersStillChoosing, isSpectator } from './stores/pokieStore.js'
 
 	import { chart } from "svelte-apexcharts";
 	import ConfettiGenerator from "confetti-js";
@@ -11,22 +14,19 @@
 	let ws
 	initWebSocket() 
 
+
+
 	let options = {}
 	let showNameSelection = true
-	let isSpectator = false
 	let name = ''
 	let nameErrors = []
 	let pointOptions = [1, 2, 3, 5, 8, 13]
 	let mySelection = null
-	let players = []
-	let cardsFlipped = false
-	let playersStillChoosing = ''
-	let waitingForMessage = false
 	let confetti = {}
 	let placeholderName = getRandomName()
 
 	function checkForConfetti() {
-		let choices = players.reduce((allPoints, player) => {
+		let choices = $players.reduce((allPoints, player) => {
 			allPoints[player.points] = true
 			return allPoints
 		}, {})
@@ -47,61 +47,76 @@
 		if(confetti.clear) confetti.clear();
 	}
 
+	function sendMessage(message) {
+		const websocketConnected = ws.readyState === WebSocket.OPEN
+
+		if(websocketConnected) {
+			ws.send(JSON.stringify(message))
+		} else {
+			reconnect()
+			.then(() => {
+				ws.send(JSON.stringify(message))
+			})
+		}
+	}
+
 	function joinTheTable() {
 		if(!name) name = placeholderName
 		showNameSelection = false
-		ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
+		sendMessage({type: 'playerUpdate', user: name, points: null})
 	}
 
 	function joinSpectator() {
-		isSpectator = true
+		$isSpectator = true
 		showNameSelection = false
+		sendMessage({type: 'getPlayers'})
 	}
 	
 	function sendPoints(event) {
-		if(cardsFlipped === false) {
+		if($cardsFlipped === false) {
 			let points = event.detail.value
 			if(points === mySelection) points = null
 			mySelection = points
-			waitingForMessage = true
-			ws.send(JSON.stringify({type: 'playerUpdate', user: name, points}))
+			$waitingForMessage = true
+			sendMessage({type: 'playerUpdate', user: name, points})
 		}
 	}
 
 	function cardFlip() {
-		ws.send(JSON.stringify({type: 'cardFlip'}))
+		sendMessage({type: 'cardFlip'})
 	}
 
 	function nextIssue() {
-		ws.send(JSON.stringify({type: 'nextIssue'}))
+		sendMessage({type: 'nextIssue'})
 	}
 
 	function initWebSocket() {
 		ws = new WebSocket(wshost)
-		console.log('in thing')
 
 		return new Promise((resolve, reject) => {
 			let connectionCheck = setInterval(() => {
 				const socketConnected = ws.readyState === WebSocket.OPEN
-				
+				console.log('socket connected', socketConnected)
 				if(socketConnected) {
 						console.log('in other thing')
 						ws.addEventListener('message', msg => {
-						waitingForMessage = false
+						$waitingForMessage = false
 						let message = JSON.parse(msg.data)
 				
 						if(message.type === 'playerUpdate') {
-							players = message.players
-							playersStillChoosing = getPlayersStillChoosing()
+							$players = message.players
+							$playersStillChoosing = getPlayersStillChoosing()
+						} else if (message.type === 'getPlayers') {
+							$players = message.players
 						} else if (message.type === 'cardFlip') {
 							checkForConfetti()
 							generateOptions()
-							cardsFlipped = true
+							$cardsFlipped = true
 						} else if (message.type === 'nextIssue') {
 							stopConfetti()
 							mySelection = null
-							cardsFlipped = false
-							players = message.players
+							$cardsFlipped = false
+							$players = message.players
 						} else if (message.type === 'heartbeat') {
 							console.log('heartbeat response')
 						}
@@ -110,10 +125,9 @@
 					setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
 					function keepAlive() {
 						try {
-							ws.send(JSON.stringify({type: 'heartbeat'}))
+							sendMessage({type: 'heartbeat'})
 						} catch (error) {
-							let refresh = confirm('Hit a snag, refresh?')
-							if(refresh) location.reload()
+							reconnect()
 						}
 					}
 	
@@ -128,7 +142,7 @@
 
 
 	function getPlayersStillChoosing() {
-		let playersStillThinking = players.filter(player => !player.points).map(player => player.user)
+		let playersStillThinking = $players.filter(player => !player.points).map(player => player.user)
 
 		if(playersStillThinking.length <= 2) {
 			return playersStillThinking.join(' and ')
@@ -140,7 +154,7 @@
 
 	function generateOptions() {
 		let pointChoices = {}
-		players.forEach(player => {
+		$players.forEach(player => {
 			if(pointChoices[player.points]) {
 				pointChoices[player.points]++
 			} else {
@@ -203,21 +217,26 @@
 		return list[Math.floor(Math.random() * list.length)];
 	}
 
-	document.addEventListener("visibilitychange", function() {
+	function reconnect() {
+		return initWebSocket()
+		.then(() => {
+			if(name) {
+				sendMessage({type: 'playerUpdate', user: name, points: null})
+			}
+			if(name || (!name && $isSpectator)) {
+				console.log('showing board')
+				showNameSelection = false
+			}
+		})
+	}
+
+	document.addEventListener('visibilitychange', function() {
 		const websocketNotConnected = ws.readyState !== WebSocket.OPEN
 		const windowIsActive = document.visibilityState === 'visible'
-		console.log('will i do something?', windowIsActive && websocketNotConnected)
 
 		if(windowIsActive && websocketNotConnected) {
 			console.log('dead on return')
-			initWebSocket()
-			.then(() => {
-				if(name) {
-					ws.send(JSON.stringify({type: 'playerUpdate', user: name, points: null}))
-				}
-				showNameSelection = false
-			})
-
+			reconnect()
 		}
 	});
 
@@ -227,37 +246,26 @@
 	<canvas id="confetti"></canvas>
 	<div class="container">
 		{#if !showNameSelection }
-			<Headline class="flex flex-center">
-				Scrum Poker
-			</Headline>
-			<Divider />
-			<div class="flex flex-center flex-wrap flex-gap">
-				{#each players as {user, points}, i}
-					<div class="flex flex-column flex-center">
-						<Flip flipped={cardsFlipped} class="playing-card">
-							<PlayingCard slot="front" selected={!!points} />
-							<PlayingCard slot="back" value={cardsFlipped && points || ''} />
-						</Flip>
-						<p class="text-center">{user}</p>
-					</div>
-				{/each}
-			</div>
+			<Header/>
+			<Players/>
 			
+			<!--  game-messaging -->
 			<div class="flex flex-center actions">
-				{#if !waitingForMessage}
-					{#if mySelection === null && isSpectator === false}
+				{#if !$waitingForMessage}
+					{#if mySelection === null && $isSpectator === false}
 						<H2>Pick a card</H2>
-					{:else if cardsFlipped}
+					{:else if $cardsFlipped}
 						<Button on:click={nextIssue}>Vote Next Issue</Button>
-					{:else if players.length && !players.find(player => !player.points) && !cardsFlipped}
+					{:else if $players.length && !$players.find(player => !player.points) && !$cardsFlipped}
 						<Button on:click={cardFlip}>Show Cards</Button>
 					{:else}
-						<H2>Waiting for {playersStillChoosing} to choose</H2>
+						<H2>Waiting for {$playersStillChoosing} to choose</H2>
 					{/if}
 				{/if}
 			</div>
 		
-			{#if !isSpectator}
+			<!-- point-options -->
+			{#if !$isSpectator}
 				<div class="flex flex-center flex-wrap flex-gap">
 					{#each pointOptions as pointValue, i}
 						<PlayingCard value={pointValue} selected={mySelection === pointValue} on:click={sendPoints} />
@@ -265,7 +273,8 @@
 				</div>
 			{/if}
 	
-			{#if cardsFlipped}
+			<!-- round-summary -->
+			{#if $cardsFlipped}
 				<div class="flex flex-center flex-wrap">
 					<div use:chart={options} />
 				</div>
@@ -275,7 +284,7 @@
 	</div>
 </div>
 
-
+<!-- name-selection-modal -->
 {#if showNameSelection}
 	<Modal bind:open={showNameSelection} noClickaway>
 	  <Dialog title="What's your name?" class="name-modal">
