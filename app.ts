@@ -65,7 +65,7 @@ async function serveHttp(conn: Deno.Conn) {
                     updatePlayers(message.type)
                 } else if (message.type === 'heartbeat') {
                     console.log('boop')
-                    socket.send(JSON.stringify({type: message.type}))
+                    // socket.send(JSON.stringify({type: message.type}))
                 } else {
                     console.log('message is', message)
                 }
