@@ -1,4 +1,4 @@
-
+#! /bin/bash
 COMMIT_MESSAGE
 
 if [ -z "$1" ]; then
@@ -12,6 +12,6 @@ npm run build
 echo "building"
 git add .
 echo "building"
-git commit -m COMMIT_MESSAGE
+git commit -m "$COMMIT_MESSAGE"
 echo "building"
 git push heroku master

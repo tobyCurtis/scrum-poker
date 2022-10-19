@@ -134,7 +134,7 @@
 					clearInterval(connectionCheck)
 					resolve()
 				}
-			}, 2500)
+			}, 800)
 
 		})
 	
