@@ -32,7 +32,7 @@ async function serveHttp(conn: Deno.Conn) {
         const url = new URL(requestEvent.request.url);
         const filepath = decodeURIComponent(url.pathname);
 
-        console.log('filepath', filepath, 'for', httpConn)
+        console.log('filepath', filepath, 'for', httpConn.remoteAddr)
 
         if(filepath === '/ws'){
             const upgrade = requestEvent.request.headers.get("upgrade") || "";
