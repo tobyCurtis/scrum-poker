@@ -90,47 +90,75 @@
 		sendMessage({type: 'nextIssue'})
 	}
 
+
+	// function isSocketConnected() {
+	// 	return ws.readyState === WebSocket.OPEN
+	// }
+
+	// function connectToWebSocket() {
+	// 	let attempts = 0
+	// 	const maxTries = 5
+	// 	const milliSecondsToWaitBetweenSocketReconnections = 2000
+
+	// 	return new Promise((resolve, reject) => {
+	// 		ws = new WebSocket(wshost)
+	// 		if(isSocketConnected()) {
+	// 			resolve()
+	// 		} else {
+	// 			setInterval(tryAgain, milliSecondsToWaitBetweenSocketReconnections);
+	// 			function tryAgain() {
+	// 				if(attempts < maxTries) {
+	// 					ws = new WebSocket(wshost)
+	// 					attempts++
+	// 					if(isSocketConnected()) {
+	// 						resolve()
+	// 					} 
+	// 				} else {
+	// 					reject('TOO_MANY_CONNECTIONS')
+	// 				}
+	// 			}
+	// 		}
+	// 	})
+	// }
+
 	function initWebSocket() {
 		ws = new WebSocket(wshost)
-		const socketConnected = ws.readyState === WebSocket.OPEN
-		console.log('socket connected', socketConnected)
 
 		return new Promise((resolve, reject) => {
-						console.log('in other thing')
-						ws.addEventListener('message', msg => {
-						$waitingForMessage = false
-						let message = JSON.parse(msg.data)
-				
-						if(message.type === 'playerUpdate') {
-							$players = message.players
-							$playersStillChoosing = getPlayersStillChoosing()
-						} else if (message.type === 'getPlayers') {
-							$players = message.players
-						} else if (message.type === 'cardFlip') {
-							checkForConfetti()
-							generateOptions()
-							$cardsFlipped = true
-						} else if (message.type === 'nextIssue') {
-							stopConfetti()
-							mySelection = null
-							$cardsFlipped = false
-							$players = message.players
-						} else if (message.type === 'heartbeat') {
-							console.log('heartbeat response')
-						}
-					})
-	
-					setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
-					function keepAlive() {
-						try {
-							sendMessage({type: 'heartbeat'})
-						} catch (error) {
-							reconnect()
-						}
-					}
-	
-					resolve()
+			console.log('in other thing')
+			ws.addEventListener('message', msg => {
+				$waitingForMessage = false
+				let message = JSON.parse(msg.data)
 
+				if(message.type === 'playerUpdate') {
+					$players = message.players
+					$playersStillChoosing = getPlayersStillChoosing()
+				} else if (message.type === 'getPlayers') {
+					$players = message.players
+				} else if (message.type === 'cardFlip') {
+					checkForConfetti()
+					generateOptions()
+					$cardsFlipped = true
+				} else if (message.type === 'nextIssue') {
+					stopConfetti()
+					mySelection = null
+					$cardsFlipped = false
+					$players = message.players
+				} else if (message.type === 'heartbeat') {
+					console.log('heartbeat response')
+				}
+			})
+
+			setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
+			function keepAlive() {
+				try {
+					sendMessage({type: 'heartbeat'})
+				} catch (error) {
+					reconnect()
+				}
+			}
+
+			resolve()
 		})
 	
 	}
