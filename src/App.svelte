@@ -92,12 +92,10 @@
 
 	function initWebSocket() {
 		ws = new WebSocket(wshost)
+		const socketConnected = ws.readyState === WebSocket.OPEN
+		console.log('socket connected', socketConnected)
 
 		return new Promise((resolve, reject) => {
-			let connectionCheck = setInterval(() => {
-				const socketConnected = ws.readyState === WebSocket.OPEN
-				console.log('socket connected', socketConnected)
-				if(socketConnected) {
 						console.log('in other thing')
 						ws.addEventListener('message', msg => {
 						$waitingForMessage = false
@@ -131,10 +129,7 @@
 						}
 					}
 	
-					clearInterval(connectionCheck)
 					resolve()
-				}
-			}, 2000)
 
 		})
 	

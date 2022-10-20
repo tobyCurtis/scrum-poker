@@ -32,15 +32,17 @@ async function serveHttp(conn: Deno.Conn) {
         const url = new URL(requestEvent.request.url);
         const filepath = decodeURIComponent(url.pathname);
 
-        console.log('filepath', filepath)
+        console.log('filepath', filepath, 'for', httpConn)
 
         if(filepath === '/ws'){
             const upgrade = requestEvent.request.headers.get("upgrade") || "";
             if (upgrade.toLowerCase() != "websocket") {
-              return new Response("request isn't trying to upgrade to websocket.");
+                console.log('socket upgrade')
+                return new Response("request isn't trying to upgrade to websocket.");
             }
             const { socket, response } = Deno.upgradeWebSocket(requestEvent.request);
             socket.onopen = () => {
+                console.log('socket opened')
                 updatePlayers('playerUpdate')
             };
             socket.onmessage = (e) => {
@@ -67,21 +69,27 @@ async function serveHttp(conn: Deno.Conn) {
                     console.log('boop')
                     // socket.send(JSON.stringify({type: message.type}))
                 } else {
-                    console.log('message is', message)
+                    console.log('unknown message is', message)
                 }
-            
             };
-            socket.onerror = (e) => console.log("socket errored:", e);
+            socket.onerror = (e) => {
+                console.log("socket errored:", e)   
+                console.log('closing socket')
+                socket.close()
+            };
             socket.onclose = () => {
+                console.log('socket closing')
                 sockets.delete(uid)
                 players.delete(uid)
 
                 updatePlayers('playerUpdate')
-            }; // remove from sockets map
+            };
             
             const uid = v4.generate();
+            console.log('setting socket', uid)
             sockets.set(uid, socket)
 
+            console.log('responding with', response)
             await requestEvent.respondWith(response);
         } else {
             let file;
