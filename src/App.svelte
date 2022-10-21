@@ -4,7 +4,7 @@
 	import Header from './components/Header.svelte'
 	import Players from './components/Players.svelte'
 	import { Button, Modal, Dialog, TextField, Headline, Divider, H2 } from 'attractions';
-	import { players, cardsFlipped, waitingForMessage, playersStillChoosing, isSpectator } from './stores/pokieStore.js'
+	import { players, cardsFlipped, waitingForMessage, playersStillChoosing, isSpectator, lastChosenPoints } from './stores/pokieStore.js'
 
 	import { chart } from "svelte-apexcharts";
 	import ConfettiGenerator from "confetti-js";
@@ -49,16 +49,6 @@
 
 	function sendMessage(message) {
 		ws.send(JSON.stringify(message))
-		// const websocketConnected = ws.readyState === WebSocket.OPEN
-
-		// if(websocketConnected) {
-		// 	ws.send(JSON.stringify(message))
-		// } else {
-		// 	reconnect()
-		// 	.then(() => {
-		// 		ws.send(JSON.stringify(message))
-		// 	})
-		// }
 	}
 
 	function joinTheTable() {
@@ -79,6 +69,7 @@
 			if(points === mySelection) points = null
 			mySelection = points
 			$waitingForMessage = true
+			$lastChosenPoints = points
 			sendMessage({type: 'playerUpdate', user: name, points})
 		}
 	}
@@ -116,6 +107,7 @@
 						mySelection = null
 						$cardsFlipped = false
 						$players = message.players
+						$lastChosenPoints = null
 					} else if (message.type === 'heartbeat') {
 						console.log('heartbeat response')
 					}
@@ -218,7 +210,7 @@
 		return initWebSocket()
 		.then(() => {
 			if(name) {
-				sendMessage({type: 'playerUpdate', user: name, points: null})
+				sendMessage({type: 'playerUpdate', user: name, points: $lastChosenPoints})
 			}
 			if(name || (!name && $isSpectator)) {
 				console.log('showing board')
