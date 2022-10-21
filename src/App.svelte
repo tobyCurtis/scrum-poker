@@ -281,13 +281,12 @@
 {#if showNameSelection}
 	<Modal bind:open={showNameSelection} noClickaway>
 	  <Dialog title="What's your name?" class="name-modal">
-		<form on:submit={joinTheTable} style="margin-bottom: 8px">
+		<form on:submit={joinTheTable} style="margin-bottom: 8px" on:dblclick={shuffleName}>
 			<TextField
 				placeholder={placeholderName}
 				bind:value={name}
 				tabindex="0"
 				error={nameErrors}
-				on:dblclick={shuffleName}
 			/>
 		</form>
 		<div class="flex flex-gap">
