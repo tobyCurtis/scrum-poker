@@ -57,6 +57,10 @@
 		sendMessage({type: 'playerUpdate', user: name, points: null})
 	}
 
+	function shuffleName() {
+		placeholderName = getRandomName()
+	}
+
 	function joinSpectator() {
 		$isSpectator = true
 		showNameSelection = false
@@ -283,6 +287,7 @@
 				bind:value={name}
 				tabindex="0"
 				error={nameErrors}
+				on:dblclick={shuffleName}
 			/>
 		</form>
 		<div class="flex flex-gap">
