@@ -120,12 +120,13 @@
 					}
 				})
 	
-				setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
+				let keepAliveInterval = setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
 				function keepAlive() {
 					try {
 						sendMessage({type: 'heartbeat'})
 					} catch (error) {
-						reconnect()
+						console.log('heartbeat error')
+						clearInterval(keepAliveInterval)
 					}
 				}
 	
