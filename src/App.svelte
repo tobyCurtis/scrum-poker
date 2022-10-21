@@ -48,16 +48,17 @@
 	}
 
 	function sendMessage(message) {
-		const websocketConnected = ws.readyState === WebSocket.OPEN
+		ws.send(JSON.stringify(message))
+		// const websocketConnected = ws.readyState === WebSocket.OPEN
 
-		if(websocketConnected) {
-			ws.send(JSON.stringify(message))
-		} else {
-			reconnect()
-			.then(() => {
-				ws.send(JSON.stringify(message))
-			})
-		}
+		// if(websocketConnected) {
+		// 	ws.send(JSON.stringify(message))
+		// } else {
+		// 	reconnect()
+		// 	.then(() => {
+		// 		ws.send(JSON.stringify(message))
+		// 	})
+		// }
 	}
 
 	function joinTheTable() {
