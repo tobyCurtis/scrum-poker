@@ -125,7 +125,7 @@
 					try {
 						sendMessage({type: 'heartbeat'})
 					} catch (error) {
-						console.log('heartbeat error')
+						console.log('heartbeat error', error)
 						clearInterval(keepAliveInterval)
 					}
 				}
