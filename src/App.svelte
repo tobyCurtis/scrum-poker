@@ -1,10 +1,24 @@
 <script>
 	import PlayingCard from './components/PlayingCard.svelte'
-	import Flip from './components/Flip.svelte'
 	import Header from './components/Header.svelte'
 	import Players from './components/Players.svelte'
-	import { Button, Modal, Dialog, TextField, Headline, Divider, H2 } from 'attractions';
-	import { players, cardsFlipped, waitingForMessage, playersStillChoosing, isSpectator, lastChosenPoints } from './stores/pokieStore.js'
+	import { Button, Modal, Dialog, TextField, H2 } from 'attractions';
+	import {
+		players,
+		cardsFlipped,
+		waitingForMessage,
+		playersStillChoosing,
+		isSpectator,
+		lastChosenPoints,
+		pointOptions,
+		showNameSelection,
+		options,
+		name,
+		nameErrors,
+		mySelection,
+		confetti,
+		placeholderName,
+	} from './stores/pokieStore.js'
 
 	import { chart } from "svelte-apexcharts";
 	import ConfettiGenerator from "confetti-js";
@@ -14,16 +28,6 @@
 	let ws
 	initWebSocket() 
 
-
-
-	let options = {}
-	let showNameSelection = true
-	let name = ''
-	let nameErrors = []
-	let pointOptions = [1, 2, 3, 5, 8, 13]
-	let mySelection = null
-	let confetti = {}
-	let placeholderName = getRandomName()
 
 	function checkForConfetti() {
 		let choices = $players.reduce((allPoints, player) => {
@@ -37,14 +41,14 @@
 	}
 
 	function doConfetti() {
-		confetti = new ConfettiGenerator({ 
+		$confetti = new ConfettiGenerator({ 
 			target: 'confetti',
 		});
-		confetti.render();
+		$confetti.render();
 	}
 
 	function stopConfetti() {
-		if(confetti.clear) confetti.clear();
+		if($confetti.clear) $confetti.clear();
 	}
 
 	function sendMessage(message) {
@@ -52,29 +56,26 @@
 	}
 
 	function joinTheTable() {
-		if(!name) name = placeholderName
-		showNameSelection = false
-		sendMessage({type: 'playerUpdate', user: name, points: null})
+		if(!$name) $name = $placeholderName
+		$showNameSelection = false
+		sendMessage({type: 'playerUpdate', user: $name, points: null})
 	}
 
-	function shuffleName() {
-		placeholderName = getRandomName()
-	}
 
 	function joinSpectator() {
 		$isSpectator = true
-		showNameSelection = false
+		$showNameSelection = false
 		sendMessage({type: 'getPlayers'})
 	}
 	
 	function sendPoints(event) {
 		if($cardsFlipped === false) {
 			let points = event.detail.value
-			if(points === mySelection) points = null
-			mySelection = points
+			if(points === $mySelection) points = null
+			$mySelection = points
 			$waitingForMessage = true
 			$lastChosenPoints = points
-			sendMessage({type: 'playerUpdate', user: name, points})
+			sendMessage({type: 'playerUpdate', user: $name, points})
 		}
 	}
 
@@ -108,7 +109,7 @@
 						$cardsFlipped = true
 					} else if (message.type === 'nextIssue') {
 						stopConfetti()
-						mySelection = null
+						$mySelection = null
 						$cardsFlipped = false
 						$players = message.players
 						$lastChosenPoints = null
@@ -155,7 +156,7 @@
 			}
 		})
 
-		options = {
+		$options = {
 			colors: ['#4300b0'],
 			grid: {
 				show: false	
@@ -199,26 +200,15 @@
 		};
 	}
 
-	function getRandomName() {
-		let firstNames = ['Berthefried', 'Tatiana', 'Hildeburg', 'Bilbo', 'Frodo', 'Theodulph', 'Poppy', 'Daddy', 'Hilda', 'Falco', 'Bandobras','Odo','Eglantine','Gerontius','Samwise','Gorbadoc','Gormadoc','Griffo','Lotho','Andwise','Bungo','Bilbo','Mungo','Balbo','Bingo','Dudo','Drogo','Elfstan','Ferdibrand','Meriadoc','Peregrin','Hamfast','Rosamunda','Menegilda','Wiseman','Wilcom','Merry','Asphodel','Firiel','Hildigrim','Donnamira','Rosie','Filibert','Sigismond','Isembold','Hugo','Lalia','Marmadoc','Saradoc','Primula','Tobold','Mimosa','Orgulas','Frodo','Lobelia','Togo','Celandine','Wilibald','Robin','Ted','Adaldrida','Will','Adamanta','Belladonna','Flambard','Adalgrim','Hob',]
-		let lastNames = ['Baggins', 'Lightfoot', 'Boulderhill', 'Bolger','Twofoot','Bracegirdle','Chubb-Baggins','Bullroarer','Proudfoot','Took','Gamgee','Broadbelt','Deepdelver','Boffin','Pimple','Roper','Baggins','Fairbarn','Brandybuck','Goold','Gamwich','Jolly','Gardner','Burrows','Fairbairn','Cotton','Clayhanger','Masterful','Scattergold','Hornblower','Bunce','Sackville-Baggins','Goodbody','Smallburrow','Sandyman','Whitfoot','Hayward']
-
-		return `${pickRandom(firstNames)} ${pickRandom(lastNames)}`;
-	}
-
-	function pickRandom(list) {
-		return list[Math.floor(Math.random() * list.length)];
-	}
-
 	function reconnect() {
 		return initWebSocket()
 		.then(() => {
-			if(name) {
-				sendMessage({type: 'playerUpdate', user: name, points: $lastChosenPoints})
+			if($name) {
+				sendMessage({type: 'playerUpdate', user: $name, points: $lastChosenPoints})
 			}
-			if(name || (!name && $isSpectator)) {
+			if($name || (!$name && $isSpectator)) {
 				console.log('showing board')
-				showNameSelection = false
+				$showNameSelection = false
 			}
 		})
 	}
@@ -238,14 +228,14 @@
 <div id="entirePage">
 	<canvas id="confetti"></canvas>
 	<div class="container">
-		{#if !showNameSelection }
+		{#if !$showNameSelection }
 			<Header/>
 			<Players/>
 			
 			<!--  game-messaging -->
 			<div class="flex flex-center actions">
 				{#if !$waitingForMessage}
-					{#if mySelection === null && $isSpectator === false}
+					{#if $mySelection === null && $isSpectator === false}
 						<H2>Pick a card</H2>
 					{:else if $cardsFlipped}
 						<Button on:click={nextIssue}>Vote Next Issue</Button>
@@ -260,8 +250,8 @@
 			<!-- point-options -->
 			{#if !$isSpectator}
 				<div class="flex flex-center flex-wrap flex-gap">
-					{#each pointOptions as pointValue, i}
-						<PlayingCard value={pointValue} selected={mySelection === pointValue} on:click={sendPoints} />
+					{#each $pointOptions as pointValue, i}
+						<PlayingCard value={pointValue} selected={$mySelection === pointValue} on:click={sendPoints} />
 					{/each}
 				</div>
 			{/if}
@@ -269,7 +259,7 @@
 			<!-- round-summary -->
 			{#if $cardsFlipped}
 				<div class="flex flex-center flex-wrap">
-					<div use:chart={options} />
+					<div use:chart={$options} />
 				</div>
 			{/if}
 		{/if}
@@ -278,15 +268,15 @@
 </div>
 
 <!-- name-selection-modal -->
-{#if showNameSelection}
-	<Modal bind:open={showNameSelection} noClickaway>
+{#if $showNameSelection}
+	<Modal bind:open={$showNameSelection} noClickaway>
 	  <Dialog title="What's your name?" class="name-modal">
-		<form on:submit={joinTheTable} style="margin-bottom: 8px" on:dblclick={shuffleName}>
+		<form on:submit={joinTheTable} style="margin-bottom: 8px" >
 			<TextField
-				placeholder={placeholderName}
-				bind:value={name}
+				placeholder={$placeholderName}
+				bind:value={$name}
 				tabindex="0"
-				error={nameErrors}
+				error={$nameErrors}
 			/>
 		</form>
 		<div class="flex flex-gap">
