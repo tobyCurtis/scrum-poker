@@ -1,14 +1,15 @@
 <script>
-	import { players, cardsFlipped, waitingForMessage, playersStillChoosing, isSpectator, mySelection } from './stores/pokieStore.js'
+	import { players, cardsFlipped, waitingForMessage, playersStillChoosing, isSpectator, mySelection } from '../stores/pokieStore.js'
     import { Button, H2 } from 'attractions';
+	import messenger from '../webSocketManager.js'
 
-    
+
 	function cardFlip() {
-		sendMessage({type: 'cardFlip'})
+		messenger.sendMessage({type: 'cardFlip'})
 	}
 
 	function nextIssue() {
-		sendMessage({type: 'nextIssue'})
+		messenger.sendMessage({type: 'nextIssue'})
 	}
 
 </script>
@@ -27,3 +28,13 @@
         {/if}
     {/if}
 </div>
+
+<style>
+
+    .actions {
+		margin: 20px 0 20px 0;
+		height: 51px;
+		text-align: center;
+	}
+
+</style>

@@ -1,8 +1,10 @@
 <script>
-	import PlayingCard from './components/PlayingCard.svelte'
 	import Header from './components/Header.svelte'
 	import Players from './components/Players.svelte'
-	import { Button, Modal, Dialog, TextField, H2 } from 'attractions';
+	import GameMessaging from './components/GameMessaging.svelte'
+	import PointOptions from './components/PointOptions.svelte'
+	import RoundSummary from './components/RoundSummary.svelte'
+	import NameSelectionModal from './components/NameSelectionModal.svelte'
 	import {
 		players,
 		cardsFlipped,
@@ -10,24 +12,43 @@
 		playersStillChoosing,
 		isSpectator,
 		lastChosenPoints,
-		pointOptions,
 		showNameSelection,
 		options,
 		name,
-		nameErrors,
 		mySelection,
 		confetti,
-		placeholderName,
 	} from './stores/pokieStore.js'
+	import messenger from './webSocketManager.js'
 
-	import { chart } from "svelte-apexcharts";
 	import ConfettiGenerator from "confetti-js";
+	
+	messenger.initWebSocket()
+	.then(() => {
+		messenger.ws.addEventListener('message', msg => {
+		    $waitingForMessage = false
+		    let message = JSON.parse(msg.data)
+	
+		    if(message.type === 'playerUpdate') {
+		        $players = message.players
+		        $playersStillChoosing = getPlayersStillChoosing()
+		    } else if (message.type === 'getPlayers') {
+		        $players = message.players
+		    } else if (message.type === 'cardFlip') {
+		        checkForConfetti()
+		        generateOptions()
+		        $cardsFlipped = true
+		    } else if (message.type === 'nextIssue') {
+		        stopConfetti()
+		        $mySelection = null
+		        $cardsFlipped = false
+		        $players = message.players
+		        $lastChosenPoints = null
+		    } else if (message.type === 'heartbeat') {
+		        console.log('heartbeat response')
+		    }
+		})
 
-	const heartbeatTimeInMilliseconds = 50000
-	const wshost = production ? location.origin.replace(/^http/, 'ws') + '/ws' : 'ws://localhost:3000/ws'
-	let ws
-	initWebSocket() 
-
+	})
 
 	function checkForConfetti() {
 		let choices = $players.reduce((allPoints, player) => {
@@ -51,88 +72,6 @@
 		if($confetti.clear) $confetti.clear();
 	}
 
-	function sendMessage(message) {
-		ws.send(JSON.stringify(message))
-	}
-
-	function joinTheTable() {
-		if(!$name) $name = $placeholderName
-		$showNameSelection = false
-		sendMessage({type: 'playerUpdate', user: $name, points: null})
-	}
-
-
-	function joinSpectator() {
-		$isSpectator = true
-		$showNameSelection = false
-		sendMessage({type: 'getPlayers'})
-	}
-	
-	function sendPoints(event) {
-		if($cardsFlipped === false) {
-			let points = event.detail.value
-			if(points === $mySelection) points = null
-			$mySelection = points
-			$waitingForMessage = true
-			$lastChosenPoints = points
-			sendMessage({type: 'playerUpdate', user: $name, points})
-		}
-	}
-
-	function cardFlip() {
-		sendMessage({type: 'cardFlip'})
-	}
-
-	function nextIssue() {
-		sendMessage({type: 'nextIssue'})
-	}
-
-	function initWebSocket() {
-		return new Promise((resolve, reject) => {
-			ws = new WebSocket(wshost)
-
-			ws.addEventListener('open', () => {
-				console.log('websocket opened')
-
-				ws.addEventListener('message', msg => {
-					$waitingForMessage = false
-					let message = JSON.parse(msg.data)
-	
-					if(message.type === 'playerUpdate') {
-						$players = message.players
-						$playersStillChoosing = getPlayersStillChoosing()
-					} else if (message.type === 'getPlayers') {
-						$players = message.players
-					} else if (message.type === 'cardFlip') {
-						checkForConfetti()
-						generateOptions()
-						$cardsFlipped = true
-					} else if (message.type === 'nextIssue') {
-						stopConfetti()
-						$mySelection = null
-						$cardsFlipped = false
-						$players = message.players
-						$lastChosenPoints = null
-					} else if (message.type === 'heartbeat') {
-						console.log('heartbeat response')
-					}
-				})
-	
-				let keepAliveInterval = setInterval(keepAlive, [heartbeatTimeInMilliseconds]);
-				function keepAlive() {
-					try {
-						sendMessage({type: 'heartbeat'})
-					} catch (error) {
-						console.log('heartbeat error', error)
-						clearInterval(keepAliveInterval)
-					}
-				}
-	
-				resolve()
-
-			})
-		})
-	}
 
 
 	function getPlayersStillChoosing() {
@@ -201,10 +140,10 @@
 	}
 
 	function reconnect() {
-		return initWebSocket()
+		return messenger.initWebSocket()
 		.then(() => {
 			if($name) {
-				sendMessage({type: 'playerUpdate', user: $name, points: $lastChosenPoints})
+				messenger.sendMessage({type: 'playerUpdate', user: $name, points: $lastChosenPoints})
 			}
 			if($name || (!$name && $isSpectator)) {
 				console.log('showing board')
@@ -214,7 +153,7 @@
 	}
 
 	document.addEventListener('visibilitychange', function() {
-		const websocketNotConnected = ws.readyState !== WebSocket.OPEN
+		const websocketNotConnected = messenger.ws.readyState !== WebSocket.OPEN
 		const windowIsActive = document.visibilityState === 'visible'
 
 		if(windowIsActive && websocketNotConnected) {
@@ -231,61 +170,14 @@
 		{#if !$showNameSelection }
 			<Header/>
 			<Players/>
-			
-			<!--  game-messaging -->
-			<div class="flex flex-center actions">
-				{#if !$waitingForMessage}
-					{#if $mySelection === null && $isSpectator === false}
-						<H2>Pick a card</H2>
-					{:else if $cardsFlipped}
-						<Button on:click={nextIssue}>Vote Next Issue</Button>
-					{:else if $players.length && !$players.find(player => !player.points) && !$cardsFlipped}
-						<Button on:click={cardFlip}>Show Cards</Button>
-					{:else}
-						<H2>Waiting for {$playersStillChoosing} to choose</H2>
-					{/if}
-				{/if}
-			</div>
-		
-			<!-- point-options -->
-			{#if !$isSpectator}
-				<div class="flex flex-center flex-wrap flex-gap">
-					{#each $pointOptions as pointValue, i}
-						<PlayingCard value={pointValue} selected={$mySelection === pointValue} on:click={sendPoints} />
-					{/each}
-				</div>
-			{/if}
-	
-			<!-- round-summary -->
-			{#if $cardsFlipped}
-				<div class="flex flex-center flex-wrap">
-					<div use:chart={$options} />
-				</div>
-			{/if}
+			<GameMessaging />
+			<PointOptions />
+			<RoundSummary />
 		{/if}
-	
 	</div>
 </div>
 
-<!-- name-selection-modal -->
-{#if $showNameSelection}
-	<Modal bind:open={$showNameSelection} noClickaway>
-	  <Dialog title="What's your name?" class="name-modal">
-		<form on:submit={joinTheTable} style="margin-bottom: 8px" >
-			<TextField
-				placeholder={$placeholderName}
-				bind:value={$name}
-				tabindex="0"
-				error={$nameErrors}
-			/>
-		</form>
-		<div class="flex flex-gap">
-			<Button on:click={joinTheTable}>Let's Pokie</Button>
-			<Button on:click={joinSpectator}>Spectate</Button>
-		</div>
-	  </Dialog>
-	</Modal>
-{/if}
+<NameSelectionModal />
 
 <style>
 	.container {
@@ -308,12 +200,6 @@
 			margin: 0 auto;
 		}
 
-	}
-
-	.actions {
-		margin: 20px 0 20px 0;
-		height: 51px;
-		text-align: center;
 	}
 
 </style>
