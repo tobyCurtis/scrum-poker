@@ -26,7 +26,7 @@ npm run dev
 npm run deno
 ```
 
-Before pushing to wherevr you're hosting, build with
+Before pushing to wherever you're hosting, build with
 
 ```bash
 npm run build
