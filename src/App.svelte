@@ -13,7 +13,6 @@
 		players,
 		cardsFlipped,
 		waitingForMessage,
-		playersStillChoosing,
 		lastChosenPoints,
 		showNameSelection,
 		options,
@@ -29,7 +28,6 @@
 	
 		    if(message.type === 'playerUpdate') {
 		        $players = message.players
-		        $playersStillChoosing = getPlayersStillChoosing()
 		    } else if (message.type === 'getPlayers') {
 		        $players = message.players
 		    } else if (message.type === 'cardFlip') {
@@ -48,17 +46,6 @@
 		})
 
 	})
-	
-	function getPlayersStillChoosing() {
-		let playersStillThinking = $players.filter(player => !player.points).map(player => player.user)
-
-		if(playersStillThinking.length <= 2) {
-			return playersStillThinking.join(' and ')
-		} else {
-			playersStillThinking[playersStillThinking.length - 1] = ` and ${playersStillThinking[playersStillThinking.length - 1]}`
-			return playersStillThinking.join(', ')
-		}
-	}
 
 	function checkForConfetti() {
 		let choices = $players.reduce((allPoints, player) => {
@@ -173,7 +160,6 @@
 			max-width: 90%;
 			margin: 0 auto;
 		}
-
 	}
 
 </style>
