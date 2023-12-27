@@ -1,26 +1,25 @@
 <script>
+	import messenger from './webSocketManager.js'
+	import confettiGenerator from "confetti-js"
+
 	import Header from './components/Header.svelte'
 	import Players from './components/Players.svelte'
 	import GameMessaging from './components/GameMessaging.svelte'
 	import PointOptions from './components/PointOptions.svelte'
 	import RoundSummary from './components/RoundSummary.svelte'
 	import NameSelectionModal from './components/NameSelectionModal.svelte'
+
 	import {
 		players,
 		cardsFlipped,
 		waitingForMessage,
 		playersStillChoosing,
-		isSpectator,
 		lastChosenPoints,
 		showNameSelection,
 		options,
-		name,
 		mySelection,
 		confetti,
 	} from './stores/pokieStore.js'
-	import messenger from './webSocketManager.js'
-
-	import ConfettiGenerator from "confetti-js";
 	
 	messenger.initWebSocket()
 	.then(() => {
@@ -35,7 +34,7 @@
 		        $players = message.players
 		    } else if (message.type === 'cardFlip') {
 		        checkForConfetti()
-		        generateOptions()
+		        generateChartOptions()
 		        $cardsFlipped = true
 		    } else if (message.type === 'nextIssue') {
 		        stopConfetti()
@@ -49,31 +48,7 @@
 		})
 
 	})
-
-	function checkForConfetti() {
-		let choices = $players.reduce((allPoints, player) => {
-			allPoints[player.points] = true
-			return allPoints
-		}, {})
-
-		if(Object.keys(choices).length === 1) {
-			doConfetti()
-		}
-	}
-
-	function doConfetti() {
-		$confetti = new ConfettiGenerator({ 
-			target: 'confetti',
-		});
-		$confetti.render();
-	}
-
-	function stopConfetti() {
-		if($confetti.clear) $confetti.clear();
-	}
-
-
-
+	
 	function getPlayersStillChoosing() {
 		let playersStillThinking = $players.filter(player => !player.points).map(player => player.user)
 
@@ -85,7 +60,25 @@
 		}
 	}
 
-	function generateOptions() {
+	function checkForConfetti() {
+		let choices = $players.reduce((allPoints, player) => {
+			allPoints[player.points] = true
+			return allPoints
+		}, {})
+
+		if(Object.keys(choices).length === 1) {
+			doConfetti()
+		}
+	}
+	
+	function doConfetti() {
+		$confetti = new confettiGenerator({ 
+			target: 'confetti',
+		});
+		$confetti.render();
+	}
+	
+	function generateChartOptions() {
 		let pointChoices = {}
 		$players.forEach(player => {
 			if(pointChoices[player.points]) {
@@ -139,28 +132,9 @@
 		};
 	}
 
-	function reconnect() {
-		return messenger.initWebSocket()
-		.then(() => {
-			if($name) {
-				messenger.sendMessage({type: 'playerUpdate', user: $name, points: $lastChosenPoints})
-			}
-			if($name || (!$name && $isSpectator)) {
-				console.log('showing board')
-				$showNameSelection = false
-			}
-		})
+	function stopConfetti() {
+		if($confetti.clear) $confetti.clear();
 	}
-
-	document.addEventListener('visibilitychange', function() {
-		const websocketNotConnected = messenger.ws.readyState !== WebSocket.OPEN
-		const windowIsActive = document.visibilityState === 'visible'
-
-		if(windowIsActive && websocketNotConnected) {
-			console.log('dead on return')
-			reconnect()
-		}
-	});
 
 </script>
 
