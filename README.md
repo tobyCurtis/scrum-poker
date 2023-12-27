@@ -4,7 +4,7 @@
 
 ---
 
-# scrum po
+# scrum poker 
 
 ## Get started
 
