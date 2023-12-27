@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "deno": "deno run --allow-net --allow-read --allow-env app.ts",
+    "deno": "deno run --allow-net --allow-read --allow-env server.ts",
     "start": "sirv public --no-clear"
   },
   "devDependencies": {
