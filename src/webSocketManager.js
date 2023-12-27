@@ -1,10 +1,5 @@
 import { name, lastChosenPoints, isSpectator, showNameSelection } from './stores/pokieStore.js'
 
-
-// console.log('in here', players)
-
-// export const tempWs = {}
-
 const heartbeatTimeInMilliseconds = 50000
 const wshost = production ? location.origin.replace(/^http/, 'ws') + '/ws' : 'ws://localhost:3000/ws'
 
