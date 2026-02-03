@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "rollup -c",
+    "clean": "rm -rf public/build && mkdir -p public/build",
+    "build": "npm run clean && rollup -c",
     "dev": "rollup -c -w",
-    "deno": "deno run --allow-net --allow-read --allow-env server.ts",
+    "serve": "deno run --allow-net --allow-read --allow-env server.ts",
     "start": "sirv public --no-clear"
   },
   "devDependencies": {

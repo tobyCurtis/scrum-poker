@@ -7,6 +7,7 @@ interface Player {
   points?: number;
 }
 
+const STATIC_ROOT = Deno.env.get("STATIC_ROOT") ?? "public";
 const sockets = new Map<string, WebSocket>();
 const players = new Map<string, Player>();
 
@@ -80,13 +81,15 @@ async function handleWebSocket(requestEvent) {
 async function openGeneralFilepath(requestEvent, filepath) {
   let file;
   try {
-    file = await Deno.open("." + filepath, { read: true });
+    // Resolve safely under STATIC_ROOT
+    const fsPath = path.join(STATIC_ROOT, filepath);
+    file = await Deno.open(fsPath, { read: true });
     const stat = await file.stat();
 
     if (stat.isDirectory) {
       file.close();
-      const filePath = path.join("./", filepath, "index.html");
-      file = await Deno.open(filePath, { read: true });
+      const indexPath = path.join(STATIC_ROOT, filepath, "index.html");
+      file = await Deno.open(indexPath, { read: true });
     }
   } catch {
     const notFoundResponse = new Response("404 Not Found", { status: 404 });
