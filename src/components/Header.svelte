@@ -4,6 +4,6 @@
 
 <!-- header -->
 <Headline class="flex flex-center">
-    Scrum Poker
+    Scrum Pokers
 </Headline>
 <Divider />
