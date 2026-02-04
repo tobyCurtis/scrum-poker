@@ -45,7 +45,9 @@ export default {
 	},
 	plugins: [
 		replace({
-			production
+			preventAssignment: true,
+			production,
+			'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development')
 		}),
 		svelte({
 			...svelteConfig,
