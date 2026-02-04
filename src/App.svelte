@@ -6,10 +6,12 @@
 	import Players from './components/Players.svelte'
 	import GameMessaging from './components/GameMessaging.svelte'
 	import PointOptions from './components/PointOptions.svelte'
-import RoundSummary from './components/RoundSummary.svelte'
-import NameSelectionModal from './components/NameSelectionModal.svelte'
-import { Button } from 'attractions'
-import { onMount } from 'svelte'
+	import RoundSummary from './components/RoundSummary.svelte'
+	import NameSelectionModal from './components/NameSelectionModal.svelte'
+	import { Button } from 'attractions'
+	import { onMount } from 'svelte'
+	import { fly } from 'svelte/transition'
+	import { backOut } from 'svelte/easing'
 
 	import {
 		players,
@@ -19,19 +21,19 @@ import { onMount } from 'svelte'
 		showNameSelection,
 		options,
 		mySelection,
-	confetti,
-	roomId,
-} from './stores/pokieStore.js'
+		confetti,
+		roomId,
+	} from './stores/pokieStore.js'
 
-// Seed room from URL param (?room=xyz) so invite links prefill and join the right room.
-if (typeof window !== 'undefined') {
-	const inviteRoom = new URL(window.location.href).searchParams.get('room')
-	if (inviteRoom) {
-		roomId.set(inviteRoom.trim())
+	// Seed room from URL param (?room=xyz) so invite links prefill and join the right room.
+	if (typeof window !== 'undefined') {
+		const inviteRoom = new URL(window.location.href).searchParams.get('room')
+		if (inviteRoom) {
+			roomId.set(inviteRoom.trim())
+		}
 	}
-}
 
-let showSideControls = false;
+	let adminMode = false;
 	
 	messenger.initWebSocket()
 	.then(() => {
@@ -39,21 +41,16 @@ let showSideControls = false;
 		    $waitingForMessage = false
 		    let message = JSON.parse(msg.data)
 
-		    console.log('ws message', message)
-
 		    const msgRoom = message.roomId || 'main'
 
 		    if (msgRoom !== $roomId) {
-		    	console.log('ignoring message for room', msgRoom, 'current', $roomId)
 		    	return
 		    }
 
 		    if(message.type === 'playerUpdate') {
 		        $players = sanitizePlayers(message.players)
-		        console.log('players updated', $players)
 		    } else if (message.type === 'getPlayers') {
 		        $players = sanitizePlayers(message.players)
-		        console.log('players fetched', $players)
 		    } else if (message.type === 'cardFlip') {
 		        checkForConfetti()
 		        generateChartOptions()
@@ -64,16 +61,26 @@ let showSideControls = false;
 		        $cardsFlipped = false
 		        $players = message.players
 		        $lastChosenPoints = null
+		    } else if (message.type === 'kicked') {
+		    	$showNameSelection = true
+		    	$mySelection = null
+		    	$players = []
+		    	// Refresh to fully reset client state after a kick
+		    	if (typeof window !== 'undefined') {
+		    		window.location.reload()
+		    	}
 		    } else if (message.type === 'heartbeat') {
-		        console.log('heartbeat response')
+				console.log('boop...')
 		    }
 		})
 
 	})
 
 	function checkForConfetti() {
-		let choices = $players.reduce((allPoints, player) => {
-			allPoints[player.points] = true
+		const choices = $players.reduce((allPoints, player) => {
+			if (player.points != null) {
+				allPoints[player.points] = true
+			}
 			return allPoints
 		}, {})
 
@@ -152,7 +159,7 @@ let showSideControls = false;
 			const key = (event.key || '').toLowerCase();
 			if ((event.metaKey || event.ctrlKey) && event.shiftKey && key === 'g') {
 				event.preventDefault();
-				showSideControls = !showSideControls;
+				adminMode = !adminMode;
 			}
 		}
 
@@ -168,6 +175,15 @@ let showSideControls = false;
 		messenger.sendMessage({ type: 'cardFlip' })
 	}
 
+	function toggleConfetti() {
+		if ($confetti && $confetti.clear) {
+			stopConfetti()
+			$confetti = {}
+		} else {
+			doConfetti()
+		}
+	}
+
 	/**
 	 * Drop malformed players to avoid rendering "[object Object]" or blanks.
 	 */
@@ -177,7 +193,6 @@ let showSideControls = false;
 			.map(p => ({ ...p, user: p.user.trim() }))
 
 		if (cleaned.length !== (incoming || []).length) {
-			console.warn('Dropping invalid player records', { incoming, cleaned })
 		}
 
 		return cleaned
@@ -190,16 +205,17 @@ let showSideControls = false;
 	<div class="container">
 		{#if !$showNameSelection }
 			<Header/>
-			<Players/>
+			<Players {adminMode}/>
 			<GameMessaging />
 			<PointOptions />
 			<RoundSummary />
 		{/if}
 	</div>
-	{#if showSideControls}
-		<div class="reset-wrapper">
+	{#if adminMode}
+		<div class="reset-wrapper" transition:fly={{ x: 200, duration: 220, easing: backOut }}>
 			<Button class="side-button" type="button" outlined on:click={resetAll}>Reset</Button>
 			<Button class="side-button" type="button" on:click={flipCards}>Flip Cards</Button>
+			<Button class="side-button" type="button" on:click={toggleConfetti}>Toggle Confetti</Button>
 		</div>
 	{/if}
 </div>

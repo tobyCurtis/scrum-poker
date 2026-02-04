@@ -33,10 +33,9 @@ function broadcast(room: RoomState, payload: Record<string, unknown>) {
   }
   room.sockets.forEach((socket) => {
     try {
-      console.log('broadcast', payload)
       socket.send(JSON.stringify(payload));
-    } catch (err) {
-      console.log("broadcast error", err);
+    } catch (_err) {
+      /* ignore send errors */
     }
   });
 }
@@ -49,7 +48,6 @@ function updatePlayers(roomId: string, type: string) {
 async function handleWebSocket(requestEvent) {
   const upgrade = requestEvent.request.headers.get("upgrade") || "";
   if (upgrade.toLowerCase() != "websocket") {
-    console.log('socket upgrade')
     return new Response("request isn't trying to upgrade to websocket.");
   }
   const { socket, response } = Deno.upgradeWebSocket(requestEvent.request);
@@ -57,17 +55,14 @@ async function handleWebSocket(requestEvent) {
   let clientRoomId = "main";
 
   socket.onopen = () => {
-    console.log('socket opened', uid)
     getRoom(clientRoomId).sockets.set(uid, socket)
   };
 
   socket.onmessage = (e) => {
-    console.log("socket message:", e.data);
     const message = JSON.parse(e.data)
     const roomId = typeof message.roomId === 'string' ? message.roomId.trim() : ''
 
     if (!roomId) {
-      console.warn(`Dropping message with no roomId from ${uid}`, message)
       return
     }
 
@@ -92,19 +87,16 @@ async function handleWebSocket(requestEvent) {
       const points = message.points
 
       if (!user) {
-        console.warn(`Dropping invalid playerUpdate (missing user) from ${uid}`, message)
         return
       }
 
       room.players.set(uid, { user, points })
-      console.log('player set', { roomId, uid, user, points, total: room.players.size })
       updatePlayers(roomId, message.type)
 
     } else if (message.type === 'playerDisconnect') {
       const user = typeof message.user === 'string' ? message.user.trim() : ''
 
       if (!user) {
-        console.warn(`Ignoring playerDisconnect with no user from ${uid}`, message)
         return
       }
 
@@ -116,7 +108,6 @@ async function handleWebSocket(requestEvent) {
       updatePlayers(roomId, 'playerUpdate')
 
     } else if (message.type === 'getPlayers') {
-      console.log('getPlayers for room', roomId, 'players', room.players.size)
       updatePlayers(roomId, 'playerUpdate')
 
     } else if (message.type === 'cardFlip') {
@@ -128,22 +119,40 @@ async function handleWebSocket(requestEvent) {
       })
       updatePlayers(roomId, message.type)
 
+    } else if (message.type === 'kickPlayer') {
+      const target = typeof message.target === 'string' ? message.target.trim() : '';
+      if (!target) {
+        return;
+      }
+
+      for (const [socketId, player] of room.players.entries()) {
+        if (player.user === target) {
+          const targetSocket = room.sockets.get(socketId);
+          try {
+            targetSocket?.send(JSON.stringify({ type: 'kicked', roomId }));
+            targetSocket?.close();
+          } catch (_err) {
+            /* ignore send errors */
+          }
+          room.sockets.delete(socketId);
+          room.players.delete(socketId);
+        }
+      }
+      updatePlayers(roomId, 'playerUpdate');
+
     } else if (message.type === 'heartbeat') {
-      console.log('boop')
+      // ignore
 
     } else {
-      console.log('unknown message is', message)
+      // ignore unknown
     }
   };
 
   socket.onerror = (e) => {
-    console.log("socket errored:", e)
-    console.log('closing socket')
     socket.close()
   };
 
   socket.onclose = () => {
-    console.log('socket closing')
     if (clientRoomId) {
       const room = getRoom(clientRoomId);
       room.sockets.delete(uid);
@@ -156,7 +165,6 @@ async function handleWebSocket(requestEvent) {
     }
   };
 
-  console.log('responding with', response)
   await requestEvent.respondWith(response);
 }
 

@@ -1,6 +1,6 @@
 <script>
 	import PlayingCard from './PlayingCard.svelte'
-	import { pointOptions, isSpectator, mySelection, lastChosenPoints, waitingForMessage, name, cardsFlipped } from '../stores/pokieStore.js'
+	import { pointOptions, isSpectator, mySelection, lastChosenPoints, waitingForMessage, name, cardsFlipped, players } from '../stores/pokieStore.js'
 	import messenger from '../webSocketManager.js'
 
 	function sendPoints(event) {
@@ -10,6 +10,8 @@
 			$mySelection = points
 			$waitingForMessage = true
 			$lastChosenPoints = points
+			// Optimistically update local players so UI reflects selection before server echo.
+			$players = $players.map(p => p.user === $name ? { ...p, points } : p)
 			messenger.sendMessage({type: 'playerUpdate', user: $name, points})
 		}
 	}

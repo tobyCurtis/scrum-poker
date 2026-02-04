@@ -29,13 +29,10 @@ export default {
       try {
         this.ws = new WebSocket(wshost)
         this.ws.addEventListener('open', () => {
-          console.log('websocket opened')
-
           const keepAlive = () => {
             try {
               sendSafe(this.ws, { type: 'heartbeat', roomId: getRoomValue() })
             } catch (error) {
-              console.log('heartbeat error', error)
               clearInterval(keepAliveInterval)
             }
           }
@@ -53,7 +50,6 @@ export default {
                   sendSafe(this.ws, { type: 'playerUpdate', user: currentName, points: lastChosenPoints, roomId: currentRoom })
                 }
                 if (currentName || (!currentName && isSpectator)) {
-                  console.log('showing board')
                   showNameSelection.set(false)
                 }
               })
@@ -64,7 +60,6 @@ export default {
             const windowIsActive = document.visibilityState === 'visible'
 
             if (windowIsActive && websocketNotConnected) {
-              console.log('dead on return')
               reconnect()
             }
           });
@@ -77,7 +72,7 @@ export default {
               try {
                 sendSafe(this.ws, { type: 'playerDisconnect', user: currentName, roomId: currentRoom })
               } catch (err) {
-                console.warn('failed to notify disconnect', err)
+                /* ignore */
               }
             }
           })
@@ -91,7 +86,6 @@ export default {
   },
   sendMessage: function (message) {
     const room = getRoomValue()
-    console.log('sending message', { roomId: room, ...message })
     sendSafe(this.ws, { roomId: room, ...message })
   }
 }
