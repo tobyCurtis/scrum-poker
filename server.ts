@@ -3,21 +3,47 @@ import { readableStreamFromReader } from "https://deno.land/std@0.132.0/streams/
 import { v4 } from "https://deno.land/std@0.132.0/uuid/mod.ts";
 
 interface Player {
-  name: string;
+  user: string;
   points?: number;
 }
 
+interface RoomState {
+  sockets: Map<string, WebSocket>;
+  players: Map<string, Player>;
+}
+
 const STATIC_ROOT = Deno.env.get("STATIC_ROOT") ?? "public";
-const sockets = new Map<string, WebSocket>();
-const players = new Map<string, Player>();
+const rooms = new Map<string, RoomState>();
 
 const port = parseInt(Deno.env.get('PORT') ?? '3000');
 const server = Deno.listen({ port });
 
-function updatePlayers(type: string) {
-  sockets.forEach(socket => {
-    socket.send(JSON.stringify({ type, players: [...players.values()] }))
-  })
+function getRoom(roomId: string): RoomState {
+  const trimmed = roomId.trim() || "main";
+  if (!rooms.has(trimmed)) {
+    rooms.set(trimmed, { sockets: new Map(), players: new Map() });
+  }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return rooms.get(trimmed)!;
+}
+
+function broadcast(room: RoomState, payload: Record<string, unknown>) {
+  if (!payload.roomId) {
+    payload.roomId = "main";
+  }
+  room.sockets.forEach((socket) => {
+    try {
+      console.log('broadcast', payload)
+      socket.send(JSON.stringify(payload));
+    } catch (err) {
+      console.log("broadcast error", err);
+    }
+  });
+}
+
+function updatePlayers(roomId: string, type: string) {
+  const room = getRoom(roomId);
+  broadcast(room, { type, players: [...room.players.values()], roomId });
 }
 
 async function handleWebSocket(requestEvent) {
@@ -27,13 +53,39 @@ async function handleWebSocket(requestEvent) {
     return new Response("request isn't trying to upgrade to websocket.");
   }
   const { socket, response } = Deno.upgradeWebSocket(requestEvent.request);
+  const uid = v4.generate();
+  let clientRoomId = "main";
+
   socket.onopen = () => {
-    console.log('socket opened')
-    updatePlayers('playerUpdate')
+    console.log('socket opened', uid)
+    getRoom(clientRoomId).sockets.set(uid, socket)
   };
+
   socket.onmessage = (e) => {
     console.log("socket message:", e.data);
-    let message = JSON.parse(e.data)
+    const message = JSON.parse(e.data)
+    const roomId = typeof message.roomId === 'string' ? message.roomId.trim() : ''
+
+    if (!roomId) {
+      console.warn(`Dropping message with no roomId from ${uid}`, message)
+      return
+    }
+
+    if (roomId !== clientRoomId) {
+      // Move socket to the new room
+      const oldRoom = getRoom(clientRoomId);
+      oldRoom.sockets.delete(uid);
+      oldRoom.players.delete(uid);
+      if (oldRoom.sockets.size === 0 && oldRoom.players.size === 0) {
+        rooms.delete(clientRoomId);
+      } else {
+        updatePlayers(clientRoomId, 'playerUpdate');
+      }
+      clientRoomId = roomId;
+    }
+
+    const room = getRoom(roomId);
+    room.sockets.set(uid, socket);
 
     if (message.type === 'playerUpdate') {
       const user = typeof message.user === 'string' ? message.user.trim() : ''
@@ -44,9 +96,10 @@ async function handleWebSocket(requestEvent) {
         return
       }
 
-      players.set(uid, { user, points })
+      room.players.set(uid, { user, points })
+      console.log('player set', { roomId, uid, user, points, total: room.players.size })
+      updatePlayers(roomId, message.type)
 
-      updatePlayers(message.type)
     } else if (message.type === 'playerDisconnect') {
       const user = typeof message.user === 'string' ? message.user.trim() : ''
 
@@ -55,48 +108,53 @@ async function handleWebSocket(requestEvent) {
         return
       }
 
-      // Remove any sockets associated to this user (covers ungraceful disconnects).
-      for (const [socketId, player] of players.entries()) {
+      for (const [socketId, player] of room.players.entries()) {
         if (player.user === user) {
-          players.delete(socketId)
+          room.players.delete(socketId)
         }
       }
+      updatePlayers(roomId, 'playerUpdate')
 
-      updatePlayers(message.type)
     } else if (message.type === 'getPlayers') {
-      updatePlayers(message.type)
+      console.log('getPlayers for room', roomId, 'players', room.players.size)
+      updatePlayers(roomId, 'playerUpdate')
+
     } else if (message.type === 'cardFlip') {
-      sockets.forEach(socket => {
-        socket.send(JSON.stringify({ type: 'cardFlip' }))
-      })
+      broadcast(room, { type: 'cardFlip', roomId })
+
     } else if (message.type === 'nextIssue') {
-      players.forEach(player => {
+      room.players.forEach(player => {
         player.points = undefined
       })
+      updatePlayers(roomId, message.type)
 
-      updatePlayers(message.type)
     } else if (message.type === 'heartbeat') {
       console.log('boop')
+
     } else {
       console.log('unknown message is', message)
     }
   };
+
   socket.onerror = (e) => {
     console.log("socket errored:", e)
     console.log('closing socket')
     socket.close()
   };
+
   socket.onclose = () => {
     console.log('socket closing')
-    sockets.delete(uid)
-    players.delete(uid)
-
-    updatePlayers('playerUpdate')
+    if (clientRoomId) {
+      const room = getRoom(clientRoomId);
+      room.sockets.delete(uid);
+      room.players.delete(uid);
+      if (room.sockets.size === 0 && room.players.size === 0) {
+        rooms.delete(clientRoomId);
+      } else {
+        updatePlayers(clientRoomId, 'playerUpdate');
+      }
+    }
   };
-
-  const uid = v4.generate();
-  console.log('setting socket', uid)
-  sockets.set(uid, socket)
 
   console.log('responding with', response)
   await requestEvent.respondWith(response);

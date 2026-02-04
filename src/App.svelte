@@ -5,7 +5,7 @@
 	import Header from './components/Header.svelte'
 	import Players from './components/Players.svelte'
 	import GameMessaging from './components/GameMessaging.svelte'
-import PointOptions from './components/PointOptions.svelte'
+	import PointOptions from './components/PointOptions.svelte'
 import RoundSummary from './components/RoundSummary.svelte'
 import NameSelectionModal from './components/NameSelectionModal.svelte'
 import { Button } from 'attractions'
@@ -18,22 +18,42 @@ import { onMount } from 'svelte'
 		lastChosenPoints,
 		showNameSelection,
 		options,
-	mySelection,
+		mySelection,
 	confetti,
+	roomId,
 } from './stores/pokieStore.js'
 
-	let showSideControls = false;
+// Seed room from URL param (?room=xyz) so invite links prefill and join the right room.
+if (typeof window !== 'undefined') {
+	const inviteRoom = new URL(window.location.href).searchParams.get('room')
+	if (inviteRoom) {
+		roomId.set(inviteRoom.trim())
+	}
+}
+
+let showSideControls = false;
 	
 	messenger.initWebSocket()
 	.then(() => {
 		messenger.ws.addEventListener('message', msg => {
 		    $waitingForMessage = false
 		    let message = JSON.parse(msg.data)
-	
+
+		    console.log('ws message', message)
+
+		    const msgRoom = message.roomId || 'main'
+
+		    if (msgRoom !== $roomId) {
+		    	console.log('ignoring message for room', msgRoom, 'current', $roomId)
+		    	return
+		    }
+
 		    if(message.type === 'playerUpdate') {
 		        $players = sanitizePlayers(message.players)
+		        console.log('players updated', $players)
 		    } else if (message.type === 'getPlayers') {
 		        $players = sanitizePlayers(message.players)
+		        console.log('players fetched', $players)
 		    } else if (message.type === 'cardFlip') {
 		        checkForConfetti()
 		        generateChartOptions()

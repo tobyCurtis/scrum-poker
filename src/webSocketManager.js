@@ -1,4 +1,4 @@
-import { name, lastChosenPoints, isSpectator, showNameSelection } from './stores/pokieStore.js'
+import { name, lastChosenPoints, isSpectator, showNameSelection, roomId } from './stores/pokieStore.js'
 
 const heartbeatTimeInMilliseconds = 50000
 const wshost = production ? location.origin.replace(/^http/, 'ws') + '/ws' : 'ws://localhost:3000/ws'
@@ -7,6 +7,13 @@ function getNameValue() {
   let current
   name.subscribe(v => current = v)()
   return typeof current === 'string' ? current.trim() : ''
+}
+
+function getRoomValue() {
+  let current
+  roomId.subscribe(v => current = v)()
+  const value = typeof current === 'string' ? current.trim() : ''
+  return value || 'main'
 }
 
 function sendSafe(ws, payload) {
@@ -26,7 +33,7 @@ export default {
 
           const keepAlive = () => {
             try {
-              sendSafe(this.ws, { type: 'heartbeat' })
+              sendSafe(this.ws, { type: 'heartbeat', roomId: getRoomValue() })
             } catch (error) {
               console.log('heartbeat error', error)
               clearInterval(keepAliveInterval)
@@ -40,9 +47,10 @@ export default {
             return this.initWebSocket()
               .then(() => {
                 const currentName = getNameValue()
+                const currentRoom = getRoomValue()
 
                 if (currentName) {
-                  sendSafe(this.ws, { type: 'playerUpdate', user: currentName, points: lastChosenPoints })
+                  sendSafe(this.ws, { type: 'playerUpdate', user: currentName, points: lastChosenPoints, roomId: currentRoom })
                 }
                 if (currentName || (!currentName && isSpectator)) {
                   console.log('showing board')
@@ -64,9 +72,10 @@ export default {
           // Graceful disconnect when closing the tab/window.
           window.addEventListener('beforeunload', () => {
             const currentName = getNameValue()
+            const currentRoom = getRoomValue()
             if (currentName) {
               try {
-                sendSafe(this.ws, { type: 'playerDisconnect', user: currentName })
+                sendSafe(this.ws, { type: 'playerDisconnect', user: currentName, roomId: currentRoom })
               } catch (err) {
                 console.warn('failed to notify disconnect', err)
               }
@@ -81,6 +90,8 @@ export default {
     })
   },
   sendMessage: function (message) {
-    sendSafe(this.ws, message)
+    const room = getRoomValue()
+    console.log('sending message', { roomId: room, ...message })
+    sendSafe(this.ws, { roomId: room, ...message })
   }
 }
