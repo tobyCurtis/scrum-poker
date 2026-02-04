@@ -23,6 +23,7 @@
 		mySelection,
 		confetti,
 		roomId,
+		roomPrefilled,
 	} from './stores/pokieStore.js'
 
 	// Seed room from URL param (?room=xyz) so invite links prefill and join the right room.
@@ -30,6 +31,7 @@
 		const inviteRoom = new URL(window.location.href).searchParams.get('room')
 		if (inviteRoom) {
 			roomId.set(inviteRoom.trim())
+			roomPrefilled.set(true)
 		}
 	}
 

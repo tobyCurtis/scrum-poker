@@ -13,7 +13,8 @@ export const waitingForMessage = writable(false)
 export const lastChosenPoints = writable(null)
 export const confetti = writable({})
 export const placeholderName = writable(getRandomName())
-export const roomId = writable('main')
+export const roomId = writable('')
+export const roomPrefilled = writable(false)
 
 export const playersStillChoosing = derived([players], ([$players]) => {
     let playersStillThinking = $players.filter(player => !player.points).map(player => player.user)

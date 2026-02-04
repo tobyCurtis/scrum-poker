@@ -1,6 +1,6 @@
 <script>
 	import { Button, Modal, Dialog, TextField } from 'attractions';
-	import { showNameSelection, placeholderName, name, nameErrors, isSpectator, roomId, players } from '../stores/pokieStore.js'
+	import { showNameSelection, placeholderName, name, nameErrors, isSpectator, roomId, roomPrefilled, players } from '../stores/pokieStore.js'
 	import messenger from '../webSocketManager.js'
 
 	function joinTheTable() {
@@ -50,13 +50,15 @@
 				outline
 				error={$nameErrors}
 			/>
-			<TextField
-				label="Room"
-				placeholder="main"
-				bind:value={$roomId}
-				outline
-				class="room-field"
-			/>
+			{#if !$roomPrefilled}
+				<TextField
+					label="Room"
+					placeholder="main"
+					bind:value={$roomId}
+					outline
+					class="room-field"
+				/>
+			{/if}
 			<div class="flex flex-gap">
 				<Button type="submit">Let's Pokie</Button>
 				<Button type="button" on:click={joinSpectator}>Spectate</Button>
