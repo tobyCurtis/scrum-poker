@@ -27,9 +27,9 @@
 		    let message = JSON.parse(msg.data)
 	
 		    if(message.type === 'playerUpdate') {
-		        $players = message.players
+		        $players = sanitizePlayers(message.players)
 		    } else if (message.type === 'getPlayers') {
-		        $players = message.players
+		        $players = sanitizePlayers(message.players)
 		    } else if (message.type === 'cardFlip') {
 		        checkForConfetti()
 		        generateChartOptions()
@@ -121,6 +121,21 @@
 
 	function stopConfetti() {
 		if($confetti.clear) $confetti.clear();
+	}
+
+	/**
+	 * Drop malformed players to avoid rendering "[object Object]" or blanks.
+	 */
+	function sanitizePlayers(incoming = []) {
+		const cleaned = (incoming || [])
+			.filter(p => p && typeof p.user === 'string' && p.user.trim().length > 0)
+			.map(p => ({ ...p, user: p.user.trim() }))
+
+		if (cleaned.length !== (incoming || []).length) {
+			console.warn('Dropping invalid player records', { incoming, cleaned })
+		}
+
+		return cleaned
 	}
 
 </script>

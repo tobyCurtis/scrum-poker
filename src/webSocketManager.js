@@ -3,6 +3,18 @@ import { name, lastChosenPoints, isSpectator, showNameSelection } from './stores
 const heartbeatTimeInMilliseconds = 50000
 const wshost = production ? location.origin.replace(/^http/, 'ws') + '/ws' : 'ws://localhost:3000/ws'
 
+function getNameValue() {
+  let current
+  name.subscribe(v => current = v)()
+  return typeof current === 'string' ? current.trim() : ''
+}
+
+function sendSafe(ws, payload) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(payload))
+  }
+}
+
 export default {
   ws: {},
   initWebSocket: function () {
@@ -14,7 +26,7 @@ export default {
 
           const keepAlive = () => {
             try {
-              this.sendMessage({ type: 'heartbeat' })
+              sendSafe(this.ws, { type: 'heartbeat' })
             } catch (error) {
               console.log('heartbeat error', error)
               clearInterval(keepAliveInterval)
@@ -27,10 +39,12 @@ export default {
           const reconnect = () => {
             return this.initWebSocket()
               .then(() => {
-                if (name) {
-                  this.sendMessage({ type: 'playerUpdate', user: name, points: lastChosenPoints })
+                const currentName = getNameValue()
+
+                if (currentName) {
+                  sendSafe(this.ws, { type: 'playerUpdate', user: currentName, points: lastChosenPoints })
                 }
-                if (name || (!name && isSpectator)) {
+                if (currentName || (!currentName && isSpectator)) {
                   console.log('showing board')
                   showNameSelection.set(false)
                 }
@@ -47,6 +61,18 @@ export default {
             }
           });
 
+          // Graceful disconnect when closing the tab/window.
+          window.addEventListener('beforeunload', () => {
+            const currentName = getNameValue()
+            if (currentName) {
+              try {
+                sendSafe(this.ws, { type: 'playerDisconnect', user: currentName })
+              } catch (err) {
+                console.warn('failed to notify disconnect', err)
+              }
+            }
+          })
+
           resolve()
         })
       } catch (error) {
@@ -55,6 +81,6 @@ export default {
     })
   },
   sendMessage: function (message) {
-    this.ws.send(JSON.stringify(message))
+    sendSafe(this.ws, message)
   }
 }

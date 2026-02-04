@@ -36,7 +36,31 @@ async function handleWebSocket(requestEvent) {
     let message = JSON.parse(e.data)
 
     if (message.type === 'playerUpdate') {
-      players.set(uid, message)
+      const user = typeof message.user === 'string' ? message.user.trim() : ''
+      const points = message.points
+
+      if (!user) {
+        console.warn(`Dropping invalid playerUpdate (missing user) from ${uid}`, message)
+        return
+      }
+
+      players.set(uid, { user, points })
+
+      updatePlayers(message.type)
+    } else if (message.type === 'playerDisconnect') {
+      const user = typeof message.user === 'string' ? message.user.trim() : ''
+
+      if (!user) {
+        console.warn(`Ignoring playerDisconnect with no user from ${uid}`, message)
+        return
+      }
+
+      // Remove any sockets associated to this user (covers ungraceful disconnects).
+      for (const [socketId, player] of players.entries()) {
+        if (player.user === user) {
+          players.delete(socketId)
+        }
+      }
 
       updatePlayers(message.type)
     } else if (message.type === 'getPlayers') {
