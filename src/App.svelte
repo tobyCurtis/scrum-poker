@@ -5,9 +5,11 @@
 	import Header from './components/Header.svelte'
 	import Players from './components/Players.svelte'
 	import GameMessaging from './components/GameMessaging.svelte'
-	import PointOptions from './components/PointOptions.svelte'
-	import RoundSummary from './components/RoundSummary.svelte'
-	import NameSelectionModal from './components/NameSelectionModal.svelte'
+import PointOptions from './components/PointOptions.svelte'
+import RoundSummary from './components/RoundSummary.svelte'
+import NameSelectionModal from './components/NameSelectionModal.svelte'
+import { Button } from 'attractions'
+import { onMount } from 'svelte'
 
 	import {
 		players,
@@ -16,9 +18,11 @@
 		lastChosenPoints,
 		showNameSelection,
 		options,
-		mySelection,
-		confetti,
-	} from './stores/pokieStore.js'
+	mySelection,
+	confetti,
+} from './stores/pokieStore.js'
+
+	let showSideControls = false;
 	
 	messenger.initWebSocket()
 	.then(() => {
@@ -123,6 +127,27 @@
 		if($confetti.clear) $confetti.clear();
 	}
 
+	onMount(() => {
+		const toggleControls = (event) => {
+			const key = (event.key || '').toLowerCase();
+			if ((event.metaKey || event.ctrlKey) && event.shiftKey && key === 'g') {
+				event.preventDefault();
+				showSideControls = !showSideControls;
+			}
+		}
+
+		window.addEventListener('keydown', toggleControls);
+		return () => window.removeEventListener('keydown', toggleControls);
+	});
+
+	function resetAll() {
+		messenger.sendMessage({ type: 'nextIssue' })
+	}
+
+	function flipCards() {
+		messenger.sendMessage({ type: 'cardFlip' })
+	}
+
 	/**
 	 * Drop malformed players to avoid rendering "[object Object]" or blanks.
 	 */
@@ -151,6 +176,12 @@
 			<RoundSummary />
 		{/if}
 	</div>
+	{#if showSideControls}
+		<div class="reset-wrapper">
+			<Button class="side-button" type="button" outlined on:click={resetAll}>Reset</Button>
+			<Button class="side-button" type="button" on:click={flipCards}>Flip Cards</Button>
+		</div>
+	{/if}
 </div>
 
 <NameSelectionModal />
@@ -168,6 +199,32 @@
 
 	#confetti {
 		position: absolute;
+	}
+
+	.reset-wrapper {
+		position: fixed;
+		right: 2rem;
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		align-items: flex-end;
+	}
+
+	:global(.side-button) {
+		padding: 0.6rem 1rem;
+		border: none;
+		border-radius: 6px;
+		background: #4300b0;
+		color: white;
+		font-weight: 600;
+		cursor: pointer;
+		box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+	}
+
+	:global(.side-button:hover) {
+		background: #5a20c9;
 	}
 
 	@media only screen and (max-width: 700px) {
