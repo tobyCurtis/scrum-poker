@@ -8,7 +8,7 @@
 	import PointOptions from './components/PointOptions.svelte'
 	import RoundSummary from './components/RoundSummary.svelte'
 	import NameSelectionModal from './components/NameSelectionModal.svelte'
-	import { Button } from 'attractions'
+	import { Button, Modal, Dialog, H1 } from 'attractions'
 	import { onMount } from 'svelte'
 	import { fly } from 'svelte/transition'
 	import { backOut } from 'svelte/easing'
@@ -34,6 +34,10 @@
 	}
 
 	let adminMode = false;
+	let kickDialogOpen = false;
+	let kickMessage = '';
+	let kickTimer1;
+	let kickTimer2;
 	
 	messenger.initWebSocket()
 	.then(() => {
@@ -62,13 +66,7 @@
 		        $players = message.players
 		        $lastChosenPoints = null
 		    } else if (message.type === 'kicked') {
-		    	$showNameSelection = true
-		    	$mySelection = null
-		    	$players = []
-		    	// Refresh to fully reset client state after a kick
-		    	if (typeof window !== 'undefined') {
-		    		window.location.reload()
-		    	}
+				launchKickDialog()
 		    } else if (message.type === 'heartbeat') {
 				console.log('boop...')
 		    }
@@ -154,6 +152,21 @@
 		if($confetti.clear) $confetti.clear();
 	}
 
+	function launchKickDialog() {
+		kickDialogOpen = true
+		kickMessage = "What's the shape of Italy?"
+		clearTimeout(kickTimer1)
+		clearTimeout(kickTimer2)
+		kickTimer1 = setTimeout(() => {
+			kickMessage = 'A BOOT!'
+		}, 2000)
+		kickTimer2 = setTimeout(() => {
+			if (typeof window !== 'undefined') {
+				window.location.reload()
+			}
+		}, 3000)
+	}
+
 	onMount(() => {
 		const toggleControls = (event) => {
 			const key = (event.key || '').toLowerCase();
@@ -219,6 +232,14 @@
 		</div>
 	{/if}
 </div>
+
+{#if kickDialogOpen}
+	<Modal bind:open={kickDialogOpen} noClickaway>
+		<Dialog>
+			<H1 style="margin: 1.5rem 0; text-align: center;">{kickMessage}</H1>
+		</Dialog>
+	</Modal>
+{/if}
 
 <NameSelectionModal />
 
